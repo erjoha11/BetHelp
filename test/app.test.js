@@ -84,6 +84,36 @@ test('getSafePath rejects path traversal attempts', () => {
   assert.equal(getSafePath('/../secret.txt'), null);
 });
 
+test('desktop page route is available', async (t) => {
+  const instance = server.listen(0);
+  t.after(() => instance.close());
+
+  const response = await new Promise((resolve, reject) => {
+    const req = http.get(
+      {
+        host: '127.0.0.1',
+        port: instance.address().port,
+        path: '/desktop'
+      },
+      (res) => {
+        let raw = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+          raw += chunk;
+        });
+        res.on('end', () => {
+          resolve({ statusCode: res.statusCode, body: raw });
+        });
+      }
+    );
+
+    req.on('error', reject);
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.includes('BetHelp Desktop'), true);
+});
+
 test('can create and list bets through API', async (t) => {
   const instance = server.listen(0);
   t.after(() => instance.close());

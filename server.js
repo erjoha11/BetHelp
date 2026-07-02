@@ -67,6 +67,29 @@ app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 app.use(express.static(publicDir));
 
+app.get('/desktop', (_req, res) => {
+  res.sendFile(path.join(publicDir, 'desktop.html'));
+});
+
+function createBetsFromParsedScreenshot(fileName, parsed, placedAt) {
+  const extractedBets = Array.isArray(parsed.bets) && parsed.bets.length ? parsed.bets : [parsed];
+  return extractedBets.map((entry) =>
+    addBet({
+      name: entry.name,
+      stake: entry.stake,
+      odds: entry.odds,
+      legs: entry.legs,
+      betType: entry.betType,
+      bookmaker: entry.bookmaker || parsed.bookmaker,
+      scenario: entry.scenario,
+      placedAt,
+      source: 'screenshot',
+      extractionStatus: entry.extractionStatus,
+      screenshot: `/uploads/${fileName}`
+    })
+  );
+}
+
 app.get('/api/bets', (_req, res) => {
   res.json({ bets: listBets() });
 });
@@ -100,21 +123,10 @@ app.post('/api/bets/upload', upload.single('screenshot'), (req, res) => {
       }
 
       const parsed = await extractBetFromScreenshot(req.file.path);
-      const extractedBets = Array.isArray(parsed.bets) && parsed.bets.length ? parsed.bets : [parsed];
-      const createdBets = extractedBets.map((entry) =>
-        addBet({
-          name: entry.name,
-          stake: entry.stake,
-          odds: entry.odds,
-          legs: entry.legs,
-          betType: entry.betType,
-          bookmaker: entry.bookmaker || parsed.bookmaker,
-          scenario: entry.scenario,
-          placedAt: req.body?.placedAt,
-          source: 'screenshot',
-          extractionStatus: entry.extractionStatus,
-          screenshot: `/uploads/${req.file.filename}`
-        })
+      const createdBets = createBetsFromParsedScreenshot(
+        req.file.filename,
+        parsed,
+        req.body?.placedAt
       );
 
       res.status(201).json({
@@ -126,6 +138,53 @@ app.post('/api/bets/upload', upload.single('screenshot'), (req, res) => {
     .catch((error) => {
       if (req.file?.path) {
         fs.unlinkSync(req.file.path);
+      }
+
+      res.status(400).json({ error: error.message });
+    });
+});
+
+app.post('/api/bets/upload/batch', upload.array('screenshots', 25), (req, res) => {
+  Promise.resolve()
+    .then(async () => {
+      const files = Array.isArray(req.files) ? req.files : [];
+      if (!files.length) {
+        res.status(400).json({ error: 'At least one screenshot is required' });
+        return;
+      }
+
+      const createdBets = [];
+      const fileSummaries = [];
+
+      for (const file of files) {
+        const parsed = await extractBetFromScreenshot(file.path);
+        const createdForFile = createBetsFromParsedScreenshot(
+          file.filename,
+          parsed,
+          req.body?.placedAt
+        );
+        createdBets.push(...createdForFile);
+        fileSummaries.push({
+          fileName: file.originalname,
+          storedAs: file.filename,
+          bookmaker: parsed.bookmaker || 'unknown-site',
+          extractedCount: createdForFile.length
+        });
+      }
+
+      res.status(201).json({
+        bets: createdBets,
+        extractedCount: createdBets.length,
+        filesProcessed: files.length,
+        files: fileSummaries
+      });
+    })
+    .catch((error) => {
+      const files = Array.isArray(req.files) ? req.files : [];
+      for (const file of files) {
+        if (file.path && fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
       }
 
       res.status(400).json({ error: error.message });

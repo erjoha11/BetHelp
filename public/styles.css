@@ -48,6 +48,14 @@ body {
   opacity: 0.95;
 }
 
+.hero-link {
+  display: inline-block;
+  margin-top: 0.8rem;
+  color: #dfffe8;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
 .panel {
   background: var(--panel);
   border-radius: 14px;
@@ -185,6 +193,57 @@ button.danger:hover {
   margin: 0 0 0.7rem;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.desktop-layout {
+  max-width: 1240px;
+}
+
+.desktop-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.desktop-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.desktop-refresh {
+  width: auto;
+  min-width: 120px;
+}
+
+.desktop-site-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.7rem;
+}
+
+.desktop-site-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: #f9fbff;
+}
+
+.desktop-site-card h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.desktop-site-card p {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.desktop-table-wrap table {
+  min-width: 980px;
 }
 
 table {

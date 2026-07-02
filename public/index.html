@@ -11,6 +11,7 @@
       <header class="hero">
         <h1>BetHelp</h1>
         <p>Upload betting slips from your phone, save them, and track your performance.</p>
+        <a class="hero-link" href="/desktop">Open Desktop Analysis View</a>
       </header>
 
       <section class="panel">
@@ -19,6 +20,11 @@
           <label>
             Screenshot
             <input id="screenshot" name="screenshot" type="file" accept="image/*" required />
+          </label>
+
+          <label>
+            Batch Upload (multiple screenshots)
+            <input id="batch-screenshots" name="screenshots" type="file" accept="image/*" multiple />
           </label>
 
           <div class="paste-box">
@@ -34,6 +40,7 @@
           </div>
 
           <button type="submit">Upload and Save Bet</button>
+          <button id="batch-upload-button" type="button" class="secondary">Batch Upload</button>
           <p id="form-message" class="message" aria-live="polite"></p>
         </form>
       </section>

@@ -3,6 +3,9 @@ const list = typeof document !== 'undefined' ? document.getElementById('bet-list
 const statsGrid = typeof document !== 'undefined' ? document.getElementById('stats-grid') : null;
 const formMessage = typeof document !== 'undefined' ? document.getElementById('form-message') : null;
 const screenshotInput = typeof document !== 'undefined' ? document.getElementById('screenshot') : null;
+const batchInput = typeof document !== 'undefined' ? document.getElementById('batch-screenshots') : null;
+const batchUploadButton =
+  typeof document !== 'undefined' ? document.getElementById('batch-upload-button') : null;
 const pasteButton = typeof document !== 'undefined' ? document.getElementById('paste-button') : null;
 const pasteTarget = typeof document !== 'undefined' ? document.getElementById('paste-target') : null;
 const historySearch = typeof document !== 'undefined' ? document.getElementById('history-search') : null;
@@ -273,6 +276,29 @@ async function deleteBetById(id) {
   }
 }
 
+async function runBatchUpload() {
+  if (!batchInput || !batchInput.files?.length) {
+    throw new Error('Choose one or more screenshots for batch upload');
+  }
+
+  const data = new FormData();
+  for (const file of batchInput.files) {
+    data.append('screenshots', file);
+  }
+
+  const response = await fetch('/api/bets/upload/batch', {
+    method: 'POST',
+    body: data
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.error || 'Batch upload failed');
+  }
+
+  return response.json();
+}
+
 if (form && list) {
   if (pasteButton && pasteTarget) {
     pasteButton.addEventListener('click', () => {
@@ -284,6 +310,22 @@ if (form && list) {
     pasteTarget.addEventListener('paste', handlePasteEvent);
     form.addEventListener('paste', handlePasteEvent);
   }
+
+  batchUploadButton?.addEventListener('click', async () => {
+    try {
+      setMessage('Running batch upload...');
+      const payload = await runBatchUpload();
+      const filesProcessed = Number(payload.filesProcessed || 0);
+      const extractedCount = Number(payload.extractedCount || 0);
+      setMessage(`Batch complete: ${extractedCount} bets from ${filesProcessed} screenshots.`);
+      if (batchInput) {
+        batchInput.value = '';
+      }
+      await refreshData();
+    } catch (error) {
+      setMessage(error.message, true);
+    }
+  });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BetHelp Desktop</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="layout desktop-layout">
+      <header class="hero desktop-hero">
+        <h1>BetHelp Desktop</h1>
+        <p>PC-first analysis view for reviewing all imported bets and performance.</p>
+        <div class="desktop-hero-actions">
+          <a class="hero-link" href="/">Open Upload View</a>
+          <button id="desktop-refresh" type="button" class="secondary desktop-refresh">Refresh</button>
+        </div>
+      </header>
+
+      <section class="panel desktop-summary-panel">
+        <h2>Overview</h2>
+        <div id="desktop-stats-grid" class="stats-grid"></div>
+      </section>
+
+      <section class="panel desktop-summary-panel">
+        <h2>By Site</h2>
+        <div id="desktop-site-cards" class="desktop-site-cards"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Bet History (Desktop)</h2>
+        <div class="history-toolbar">
+          <input id="desktop-search" type="search" placeholder="Search by market, team, site, scenario" />
+          <select id="desktop-status-filter">
+            <option value="all">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="won">Won</option>
+            <option value="lost">Lost</option>
+          </select>
+          <select id="desktop-site-filter">
+            <option value="all">All sites</option>
+          </select>
+        </div>
+        <p id="desktop-summary" class="history-summary"></p>
+
+        <div class="table-wrap desktop-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Bet</th>
+                <th>Site</th>
+                <th>Type</th>
+                <th>Stake</th>
+                <th>Odds</th>
+                <th>Potential Profit</th>
+                <th>Status</th>
+                <th>Slip</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="desktop-bet-list"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="desktop.js"></script>
+  </body>
+</html>

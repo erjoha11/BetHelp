@@ -22,7 +22,8 @@ const {
   extractBetFromScreenshot,
   parseBetBlocks,
   parseStake,
-  parseStatus
+  parseStatus,
+  parseNameFromMarketLine
 } = require('../lib/ocrParser');
 
 function requestJson(instance, { method, pathName, payload }) {
@@ -118,6 +119,21 @@ test('desktop page route is available', async (t) => {
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.body.includes('BetHelp Desktop'), true);
+});
+
+test('reprocess endpoint returns summary successfully', async (t) => {
+  const instance = server.listen(0);
+  t.after(() => instance.close());
+
+  const response = await requestJson(instance, {
+    method: 'POST',
+    pathName: '/api/bets/reprocess',
+    payload: {}
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(typeof response.body.reprocessed, 'number');
+  assert.equal(Array.isArray(response.body.summary), true);
 });
 
 test('can create and list bets through API', async (t) => {
@@ -293,4 +309,17 @@ test('parseStatus maps Vunnet/Tapt to won/lost', () => {
   assert.equal(parseStatus('Vunnet Singel'), 'won');
   assert.equal(parseStatus('Tapt Singel'), 'lost');
   assert.equal(parseStatus('Singel'), 'pending');
+});
+
+test('parseNameFromMarketLine extracts player market title from line with odds', () => {
+  const text = ['Fernandes, Bruno 2.05', 'Innsats 100,00 kr'].join('\n');
+  assert.equal(parseNameFromMarketLine(text), 'Fernandes, Bruno');
+});
+
+test('parseLegs extracts stacked team lines from Oddsen-style format', () => {
+  const text = ['Spania', 'Osterrike', 'HUB', 'Portugal', 'Kroatia', 'HUB'].join('\n');
+  const legs = parseLegs(text);
+  assert.equal(legs.length >= 2, true);
+  assert.equal(legs[0].homeTeam, 'Spania');
+  assert.equal(legs[0].awayTeam, 'Osterrike');
 });

@@ -14,10 +14,23 @@ const desktopSummary =
   typeof document !== 'undefined' ? document.getElementById('desktop-summary') : null;
 const desktopRefresh =
   typeof document !== 'undefined' ? document.getElementById('desktop-refresh') : null;
+const desktopReprocess =
+  typeof document !== 'undefined' ? document.getElementById('desktop-reprocess') : null;
+const desktopMessage =
+  typeof document !== 'undefined' ? document.getElementById('desktop-message') : null;
 
 let desktopBets = [];
 
 const formatCurrency = (value) => `${Number(value || 0).toFixed(2)} Kr`;
+
+function setMessage(text, isError = false) {
+  if (!desktopMessage) {
+    return;
+  }
+
+  desktopMessage.textContent = text;
+  desktopMessage.dataset.state = isError ? 'error' : 'success';
+}
 
 function formatDateTime(value) {
   if (!value) {
@@ -181,6 +194,7 @@ function renderTableRows(bets) {
             <strong>${bet.name}</strong>
             <div class="meta">${formatDateTime(bet.placedAt)}</div>
             <div class="meta">Scenario: ${bet.scenario || 'unknown'}</div>
+            <div class="meta">Confidence: ${Number(bet.confidenceScore || 0).toFixed(2)}</div>
             ${legsMarkup}
           </td>
           <td>${bet.bookmaker || 'unknown-site'}</td>
@@ -232,11 +246,37 @@ async function refreshDesktopData() {
   refreshDesktopTable();
 }
 
+async function reprocessScreenshots() {
+  const response = await fetch('/api/bets/reprocess', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.error || 'Could not reprocess screenshots');
+  }
+
+  return response.json();
+}
+
 if (desktopList) {
   desktopRefresh?.addEventListener('click', () => {
     refreshDesktopData().catch((error) => {
-      console.error(error.message);
+      setMessage(error.message, true);
     });
+  });
+
+  desktopReprocess?.addEventListener('click', async () => {
+    try {
+      setMessage('Reprocessing screenshots...');
+      const payload = await reprocessScreenshots();
+      setMessage(`Reprocessed ${payload.reprocessed || 0} screenshot groups.`);
+      await refreshDesktopData();
+    } catch (error) {
+      setMessage(error.message, true);
+    }
   });
 
   desktopList.addEventListener('change', async (event) => {
@@ -250,7 +290,7 @@ if (desktopList) {
       await updateStatus(id, target.value);
       await refreshDesktopData();
     } catch (error) {
-      console.error(error.message);
+      setMessage(error.message, true);
     }
   });
 
@@ -269,7 +309,7 @@ if (desktopList) {
       await removeBet(id);
       await refreshDesktopData();
     } catch (error) {
-      console.error(error.message);
+      setMessage(error.message, true);
     }
   });
 
@@ -279,6 +319,6 @@ if (desktopList) {
   desktopSiteFilter?.addEventListener('change', filterHandler);
 
   refreshDesktopData().catch((error) => {
-    console.error(error.message);
+    setMessage(error.message, true);
   });
 }

@@ -206,6 +206,7 @@ function renderBets(bets) {
             <div class="meta">Scenario: ${bet.scenario || 'unknown'}</div>
             <div class="meta">Type: ${bet.betType || 'single'}${legs.length ? ` (${legs.length} games)` : ''}</div>
             <div class="meta">Extraction: ${bet.extractionStatus || 'unknown'}</div>
+            <div class="meta">Confidence: ${Number(bet.confidenceScore || 0).toFixed(2)}</div>
             ${legsMarkup}
           </td>
           <td>${formatCurrency(bet.stake)}</td>

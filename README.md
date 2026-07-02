@@ -7,6 +7,7 @@ You can:
 - Batch upload multiple screenshots in one action
 - Auto-extract bet details (name, stake, decimal odds) from the screenshot
 - Detect bookmaker/site when possible
+- Keep parser confidence score per extracted bet
 - Split one screenshot into multiple bets when multiple bet blocks are present
 - Track game legs (teams) for single and multi-game bets
 - Persist bets in a local database file
@@ -15,6 +16,8 @@ You can:
 - View live stats (profit, ROI, average odds, totals)
 
 Desktop analysis view is available at `http://localhost:3000/desktop`.
+
+Desktop view includes a "Reprocess Screenshots" action that re-runs extraction on all stored screenshots using the latest parser rules.
 
 Currency display is in `Kr`.
 

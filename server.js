@@ -79,6 +79,7 @@ function createBetsFromParsedScreenshot(fileName, parsed, placedAt) {
       stake: entry.stake,
       odds: entry.odds,
       status: entry.status,
+      confidenceScore: entry.confidenceScore,
       legs: entry.legs,
       betType: entry.betType,
       bookmaker: entry.bookmaker || parsed.bookmaker,
@@ -229,6 +230,58 @@ app.delete('/api/bets/:id', (req, res) => {
   }
 
   res.json({ deletedId: id });
+});
+
+app.post('/api/bets/reprocess', (req, res) => {
+  Promise.resolve()
+    .then(async () => {
+      const allBets = listBets();
+      const requested = Array.isArray(req.body?.screenshots)
+        ? req.body.screenshots.map((value) => String(value || '').trim()).filter(Boolean)
+        : [];
+
+      const uniqueScreenshots = requested.length
+        ? requested
+        : Array.from(
+            new Set(
+              allBets
+                .filter((bet) => bet.source === 'screenshot' && bet.screenshot)
+                .map((bet) => bet.screenshot)
+            )
+          );
+
+      const summary = [];
+
+      for (const screenshotPath of uniqueScreenshots) {
+        const relative = screenshotPath.replace(/^\//, '');
+        const fullPath = path.join(__dirname, relative);
+
+        if (!fs.existsSync(fullPath)) {
+          summary.push({ screenshot: screenshotPath, skipped: true, reason: 'file-not-found' });
+          continue;
+        }
+
+        const existing = listBets().filter((bet) => bet.screenshot === screenshotPath);
+        for (const bet of existing) {
+          deleteBet(bet.id);
+        }
+
+        const parsed = await extractBetFromScreenshot(fullPath);
+        const created = createBetsFromParsedScreenshot(path.basename(fullPath), parsed);
+
+        summary.push({
+          screenshot: screenshotPath,
+          deletedCount: existing.length,
+          createdCount: created.length,
+          bookmaker: parsed.bookmaker || 'unknown-site'
+        });
+      }
+
+      res.json({ reprocessed: summary.length, summary });
+    })
+    .catch((error) => {
+      res.status(400).json({ error: error.message });
+    });
 });
 
 app.use((error, _req, res, _next) => {

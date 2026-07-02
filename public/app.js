@@ -19,6 +19,15 @@ let allBets = [];
 
 const formatCurrency = (value) => `${value.toFixed(2)} Kr`;
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 function formatSignedCurrency(value) {
   const amount = Number(value || 0);
   const sign = amount > 0 ? '+' : '';
@@ -211,21 +220,19 @@ function renderBets(bets) {
         const settled = getSettledProfit(bet);
         const typeLabel = bet.betType || 'single';
         const extractionLabel = bet.extractionStatus || 'unknown';
-        const summaryMeta = `${typeLabel} - ${extractionLabel}`;
-        const legsMarkup = legs.length
-          ? `<div class="legs-inline">${legs
+        const legsSummary = legs.length
+          ? legs
               .slice(0, 2)
               .map((leg) => `${leg.homeTeam} vs ${leg.awayTeam}`)
-              .join(' | ')}${legs.length > 2 ? ` +${legs.length - 2} more` : ''}</div>`
-          : '';
+              .join(' | ')
+          : 'No game breakdown';
+        const fullBetSummary = `${bet.name} | ${typeLabel} | ${extractionLabel} | ${legsSummary}`;
 
         return `
         <tr class="history-row">
           <td class="id-cell">${bet.id}</td>
           <td>
-            <strong class="bet-main">${bet.name}</strong>
-            <div class="bet-sub">${summaryMeta}</div>
-            ${legsMarkup}
+            <button type="button" class="bet-main bet-expand" title="${escapeHtml(fullBetSummary)}">${escapeHtml(bet.name)}</button>
           </td>
           <td>${formatDateTime(bet.placedAt)}</td>
           <td><span class="pill">${bet.bookmaker || 'unknown-site'}</span></td>
@@ -400,6 +407,12 @@ if (form && list) {
 
   list.addEventListener('click', async (event) => {
     const target = event.target;
+
+    if (target instanceof HTMLButtonElement && target.classList.contains('bet-expand')) {
+      setMessage(target.title || target.textContent || 'Bet details not available.');
+      return;
+    }
+
     if (!(target instanceof HTMLButtonElement) || !target.classList.contains('delete-bet')) {
       return;
     }

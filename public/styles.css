@@ -305,22 +305,30 @@ tbody tr:hover {
 
 .bet-main {
   display: block;
+  width: 100%;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   line-height: 1.2;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
 }
 
-.bet-sub {
-  margin-top: 0.14rem;
-  font-size: 0.76rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.bet-main:hover {
+  color: #0e6d79;
+  text-decoration: underline;
 }
 
-.legs-inline {
-  margin-top: 0.24rem;
-  color: var(--ink-soft);
-  font-size: 0.79rem;
-  line-height: 1.25;
+.desktop-table-wrap .bet-main {
+  max-width: 420px;
 }
 
 .id-cell {

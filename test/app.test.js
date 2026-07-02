@@ -26,7 +26,7 @@ const {
   parseNameFromMarketLine
 } = require('../lib/ocrParser');
 
-function requestJson(instance, { method, pathName, payload }) {
+function requestJson(instance, { method, pathName, payload, headers }) {
   return new Promise((resolve, reject) => {
     const body = payload ? JSON.stringify(payload) : null;
     const req = http.request(
@@ -35,12 +35,15 @@ function requestJson(instance, { method, pathName, payload }) {
         port: instance.address().port,
         path: pathName,
         method,
-        headers: body
-          ? {
-              'Content-Type': 'application/json',
-              'Content-Length': Buffer.byteLength(body)
-            }
-          : undefined
+        headers: {
+          ...(body
+            ? {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(body)
+              }
+            : {}),
+          ...(headers || {})
+        }
       },
       (res) => {
         let raw = '';
@@ -63,6 +66,38 @@ function requestJson(instance, { method, pathName, payload }) {
 
     req.end();
   });
+}
+
+function loadFreshServerWithEnv(env) {
+  const serverPath = require.resolve('../server.js');
+  const previous = {};
+
+  for (const [key, value] of Object.entries(env || {})) {
+    previous[key] = process.env[key];
+    if (value === undefined || value === null) {
+      delete process.env[key];
+    } else {
+      process.env[key] = String(value);
+    }
+  }
+
+  delete require.cache[serverPath];
+  const loaded = require('../server.js');
+
+  return {
+    ...loaded,
+    restore() {
+      for (const [key, value] of Object.entries(previous)) {
+        if (value === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = value;
+        }
+      }
+
+      delete require.cache[serverPath];
+    }
+  };
 }
 
 test.after(() => {
@@ -324,4 +359,97 @@ test('parseLegs extracts stacked team lines from Oddsen-style format', () => {
   assert.equal(legs.length >= 2, true);
   assert.equal(legs[0].homeTeam, 'Spania');
   assert.equal(legs[0].awayTeam, 'Osterrike');
+});
+
+test('write endpoints require API key when BETHELP_API_KEY is set', async (t) => {
+  const isolated = loadFreshServerWithEnv({ BETHELP_API_KEY: 'test-key' });
+  t.after(() => isolated.restore());
+
+  const instance = isolated.server.listen(0);
+  t.after(() => instance.close());
+
+  const unauthorized = await requestJson(instance, {
+    method: 'POST',
+    pathName: '/api/bets',
+    payload: { name: 'No Key', stake: 10, odds: 2 }
+  });
+
+  assert.equal(unauthorized.statusCode, 401);
+
+  const authorized = await requestJson(instance, {
+    method: 'POST',
+    pathName: '/api/bets',
+    payload: { name: 'With Key', stake: 10, odds: 2 },
+    headers: { 'x-api-key': 'test-key' }
+  });
+
+  assert.equal(authorized.statusCode, 201);
+  assert.equal(authorized.body.bet.name, 'With Key');
+});
+
+test('write rate limiting returns 429 after configured max writes', async (t) => {
+  const isolated = loadFreshServerWithEnv({
+    BETHELP_WRITE_RATE_WINDOW_MS: '60000',
+    BETHELP_WRITE_RATE_MAX: '1',
+    BETHELP_API_KEY: ''
+  });
+  t.after(() => isolated.restore());
+
+  const instance = isolated.server.listen(0);
+  t.after(() => instance.close());
+
+  const first = await requestJson(instance, {
+    method: 'POST',
+    pathName: '/api/bets',
+    payload: { name: 'First Write', stake: 10, odds: 2 }
+  });
+
+  const second = await requestJson(instance, {
+    method: 'POST',
+    pathName: '/api/bets',
+    payload: { name: 'Second Write', stake: 10, odds: 2 }
+  });
+
+  assert.equal(first.statusCode, 201);
+  assert.equal(second.statusCode, 429);
+});
+
+test('reprocess skips missing screenshot files without deleting existing bets', async (t) => {
+  const created = addBet({
+    source: 'screenshot',
+    name: 'Should stay',
+    stake: 50,
+    odds: 2.1,
+    screenshot: '/uploads/does-not-exist.png',
+    extractionStatus: 'parsed'
+  });
+
+  const instance = server.listen(0);
+  t.after(() => instance.close());
+
+  const response = await requestJson(instance, {
+    method: 'POST',
+    pathName: '/api/bets/reprocess',
+    payload: {}
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(Array.isArray(response.body.summary), true);
+  assert.equal(
+    response.body.summary.some(
+      (entry) =>
+        entry.screenshot === '/uploads/does-not-exist.png' &&
+        entry.skipped === true &&
+        entry.reason === 'file-not-found'
+    ),
+    true
+  );
+
+  const listResponse = await requestJson(instance, {
+    method: 'GET',
+    pathName: '/api/bets'
+  });
+
+  assert.equal(listResponse.statusCode, 200);
+  assert.equal(listResponse.body.bets.some((bet) => bet.id === created.id), true);
 });

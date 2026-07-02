@@ -52,6 +52,7 @@
             </select>
           </label>
           <div class="column-toggles">
+            <label><input type="checkbox" data-desktop-col="selection" checked /> Selection</label>
             <label><input type="checkbox" data-desktop-col="placed" checked /> Placed</label>
             <label><input type="checkbox" data-desktop-col="payout" checked /> Payout</label>
             <label><input type="checkbox" data-desktop-col="profit" checked /> Potential</label>
@@ -61,21 +62,22 @@
         <p id="desktop-summary" class="history-summary"></p>
 
         <div class="table-wrap desktop-table-wrap">
-          <table>
+          <table class="history-table">
             <thead>
               <tr>
                 <th class="sticky-col sticky-id col-id">ID</th>
                 <th class="sticky-col sticky-bet col-bet">Bet</th>
+                <th class="col-selection">Selection</th>
                 <th class="col-placed">Placed</th>
                 <th>Site</th>
                 <th>Type</th>
                 <th>Games</th>
-                <th>Stake</th>
-                <th>Odds</th>
-                <th class="col-payout">Payout</th>
-                <th class="col-profit">Potential Profit</th>
-                <th>Settled</th>
-                <th class="col-confidence">Confidence</th>
+                <th class="num">Stake</th>
+                <th class="num">Odds</th>
+                <th class="col-payout num">Payout</th>
+                <th class="col-profit num">Potential Profit</th>
+                <th class="num">Settled</th>
+                <th class="col-confidence num">Confidence</th>
                 <th>Status</th>
                 <th>Slip</th>
                 <th>Actions</th>

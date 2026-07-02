@@ -271,7 +271,7 @@ function renderBets(bets) {
 
   if (!bets.length) {
     list.innerHTML =
-      '<tr><td colspan="13" class="empty">No matching bets. Try changing filters or upload a new screenshot.</td></tr>';
+      '<tr><td colspan="15" class="empty">No matching bets. Try changing filters or upload a new screenshot.</td></tr>';
     return;
   }
 
@@ -284,6 +284,9 @@ function renderBets(bets) {
         const settled = getSettledProfit(bet);
         const typeLabel = bet.betType || 'single';
         const extractionLabel = bet.extractionStatus || 'unknown';
+        const scenarioLabel = bet.scenario || 'unknown';
+        const siteLabel = escapeHtml(bet.bookmaker || 'unknown-site');
+        const selectionText = escapeHtml(bet.selection || '-');
         const legsSummary = legs.length
           ? legs
               .slice(0, 2)
@@ -292,22 +295,35 @@ function renderBets(bets) {
           : 'No game breakdown';
         const selectionLabel = bet.selection ? `selection: ${bet.selection}` : 'selection: -';
         const fullBetSummary = `${bet.name} | ${selectionLabel} | ${typeLabel} | ${extractionLabel} | ${legsSummary}`;
+        const escapedLegsSummary = escapeHtml(legsSummary);
+        const escapedTypeLabel = escapeHtml(typeLabel);
+        const escapedScenarioLabel = escapeHtml(scenarioLabel);
+        const escapedExtractionLabel = escapeHtml(extractionLabel);
 
         return `
-        <tr class="history-row">
+        <tr class="history-row row-${bet.status}">
           <td class="id-cell sticky-col sticky-id col-id">${bet.id}</td>
           <td class="sticky-col sticky-bet col-bet">
-            <button type="button" class="bet-main bet-expand" title="${escapeHtml(fullBetSummary)}">${escapeHtml(bet.name)}</button>
+            <div class="bet-cell">
+              <button type="button" class="bet-main bet-expand" title="${escapeHtml(fullBetSummary)}">${escapeHtml(bet.name)}</button>
+              <p class="bet-subline">${escapedLegsSummary}</p>
+              <div class="bet-tags">
+                <span class="bet-tag">${escapedTypeLabel}</span>
+                <span class="bet-tag">${escapedScenarioLabel}</span>
+                <span class="bet-tag muted">${escapedExtractionLabel}</span>
+              </div>
+            </div>
           </td>
+          <td class="col-selection">${selectionText}</td>
           <td class="col-placed">${formatDateTime(bet.placedAt)}</td>
-          <td><span class="pill">${bet.bookmaker || 'unknown-site'}</span></td>
+          <td><span class="pill">${siteLabel}</span></td>
           <td>${gamesCount || '-'}</td>
-          <td>${formatCurrency(bet.stake)}</td>
-          <td>${Number(bet.odds).toFixed(2)}</td>
-          <td class="col-payout">${formatCurrency(payout)}</td>
-          <td class="col-profit">${formatCurrency(bet.profit)}</td>
-          <td class="${settled > 0 ? 'pos' : settled < 0 ? 'neg' : 'neu'}">${formatSignedCurrency(settled)}</td>
-          <td class="col-confidence">${Number(bet.confidenceScore || 0).toFixed(2)}</td>
+          <td class="num">${formatCurrency(bet.stake)}</td>
+          <td class="num">${Number(bet.odds).toFixed(2)}</td>
+          <td class="col-payout num">${formatCurrency(payout)}</td>
+          <td class="col-profit num">${formatCurrency(bet.profit)}</td>
+          <td class="num ${settled > 0 ? 'pos' : settled < 0 ? 'neg' : 'neu'}">${formatSignedCurrency(settled)}</td>
+          <td class="col-confidence num">${Number(bet.confidenceScore || 0).toFixed(2)}</td>
           <td>
             <select class="status-select status-${bet.status}" data-id="${bet.id}">
               <option value="pending" ${bet.status === 'pending' ? 'selected' : ''}>Pending</option>

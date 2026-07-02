@@ -17,7 +17,7 @@ fs.writeFileSync(testDataFile, JSON.stringify({ nextId: 1, bets: [] }, null, 2))
 const { createBetLine } = require('../public/app.js');
 const { getSafePath, server } = require('../server.js');
 const { addBet } = require('../lib/betStore');
-const { parseLegs, extractBetFromScreenshot } = require('../lib/ocrParser');
+const { parseLegs, extractBetFromScreenshot, parseBetBlocks } = require('../lib/ocrParser');
 
 function requestJson(instance, { method, pathName, payload }) {
   return new Promise((resolve, reject) => {
@@ -253,4 +253,27 @@ test('extractBetFromScreenshot returns fallback structured bets for unreadable i
   assert.equal(Array.isArray(parsed.bets), true);
   assert.equal(parsed.bets.length >= 1, true);
   assert.equal(parsed.bookmaker, 'unknown-site');
+});
+
+test('parseBetBlocks splits ComeOn singel cards into multiple bets', () => {
+  const text = [
+    'Vunnet Singel',
+    'Odegaard, Martin 3.73',
+    'Elfenbenskysten - Norge',
+    '250,00 kr',
+    'Tapt Singel',
+    'Haaland, Erling Braut 5.00',
+    'Elfenbenskysten - Norge',
+    '100,00 kr',
+    'Tapt Singel',
+    'Uavgjort 3.40',
+    'Elfenbenskysten - Norge',
+    '400,00 kr'
+  ].join('\n');
+
+  const blocks = parseBetBlocks(text);
+  assert.equal(blocks.length, 3);
+  assert.equal(blocks[0].includes('Odegaard'), true);
+  assert.equal(blocks[1].includes('Haaland'), true);
+  assert.equal(blocks[2].includes('Uavgjort'), true);
 });

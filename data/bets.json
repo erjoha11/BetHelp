@@ -1,5 +1,5 @@
 {
-  "nextId": 6,
+  "nextId": 11,
   "bets": [
     {
       "id": 4,
@@ -50,6 +50,125 @@
       "placedAt": "2026-07-02T21:40:47.560Z",
       "createdAt": "2026-07-02T21:40:47.560Z",
       "updatedAt": "2026-07-02T21:40:47.560Z"
+    },
+    {
+      "id": 6,
+      "name": "Elfenbenskysten vs Norge",
+      "stake": 0,
+      "odds": 3.73,
+      "payout": 0,
+      "profit": 0,
+      "status": "pending",
+      "source": "screenshot",
+      "bookmaker": "unknown-site",
+      "scenario": "single-game",
+      "betType": "single",
+      "legs": [
+        {
+          "homeTeam": "Elfenbenskysten",
+          "awayTeam": "Norge",
+          "rawLine": "Elfenbenskysten - Norge"
+        }
+      ],
+      "extractionStatus": "parsed",
+      "screenshot": "/uploads/1783028790122-374998930.png",
+      "placedAt": "2026-07-02T21:46:31.578Z",
+      "createdAt": "2026-07-02T21:46:31.578Z",
+      "updatedAt": "2026-07-02T21:46:31.578Z"
+    },
+    {
+      "id": 7,
+      "name": "& Internasjonal vs Fotball-VM",
+      "stake": 0,
+      "odds": 2.24,
+      "payout": 0,
+      "profit": 0,
+      "status": "pending",
+      "source": "screenshot",
+      "bookmaker": "unknown-site",
+      "scenario": "single-game",
+      "betType": "single",
+      "legs": [
+        {
+          "homeTeam": "& Internasjonal",
+          "awayTeam": "Fotball-VM",
+          "rawLine": "& Internasjonal - Fotball-VM"
+        }
+      ],
+      "extractionStatus": "parsed",
+      "screenshot": "/uploads/1783028798627-336557488.png",
+      "placedAt": "2026-07-02T21:46:39.544Z",
+      "createdAt": "2026-07-02T21:46:39.544Z",
+      "updatedAt": "2026-07-02T21:46:39.544Z"
+    },
+    {
+      "id": 8,
+      "name": "Stake 100 kr",
+      "stake": 100,
+      "odds": 1,
+      "payout": 100,
+      "profit": 0,
+      "status": "pending",
+      "source": "screenshot",
+      "bookmaker": "unknown-site",
+      "scenario": "single-game",
+      "betType": "single",
+      "legs": [],
+      "extractionStatus": "parsed",
+      "screenshot": "/uploads/1783028798627-336557488.png",
+      "placedAt": "2026-07-02T21:46:39.556Z",
+      "createdAt": "2026-07-02T21:46:39.556Z",
+      "updatedAt": "2026-07-02T21:46:39.556Z"
+    },
+    {
+      "id": 9,
+      "name": "Elfenbenskysten vs Norge",
+      "stake": 0,
+      "odds": 5,
+      "payout": 0,
+      "profit": 0,
+      "status": "pending",
+      "source": "screenshot",
+      "bookmaker": "comeon",
+      "scenario": "single-game",
+      "betType": "single",
+      "legs": [
+        {
+          "homeTeam": "Elfenbenskysten",
+          "awayTeam": "Norge",
+          "rawLine": "Elfenbenskysten - Norge"
+        }
+      ],
+      "extractionStatus": "parsed",
+      "screenshot": "/uploads/1783028790122-374998930.png",
+      "placedAt": "2026-07-02T21:53:11.900Z",
+      "createdAt": "2026-07-02T21:53:11.900Z",
+      "updatedAt": "2026-07-02T21:53:11.900Z"
+    },
+    {
+      "id": 10,
+      "name": "Elfenbenskysten vs Norge",
+      "stake": 0,
+      "odds": 3.4,
+      "payout": 0,
+      "profit": 0,
+      "status": "pending",
+      "source": "screenshot",
+      "bookmaker": "comeon",
+      "scenario": "single-game",
+      "betType": "single",
+      "legs": [
+        {
+          "homeTeam": "Elfenbenskysten",
+          "awayTeam": "Norge",
+          "rawLine": "Elfenbenskysten - Norge"
+        }
+      ],
+      "extractionStatus": "parsed",
+      "screenshot": "/uploads/1783028790122-374998930.png",
+      "placedAt": "2026-07-02T21:53:11.914Z",
+      "createdAt": "2026-07-02T21:53:11.914Z",
+      "updatedAt": "2026-07-02T21:53:11.914Z"
     }
   ]
 }

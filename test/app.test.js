@@ -14,3 +14,7 @@ test('createBetLine returns payout and profit text', () => {
 test('getSafePath maps root to index', () => {
   assert.equal(getSafePath('/'), '/index.html');
 });
+
+test('getSafePath normalizes path traversal attempts', () => {
+  assert.equal(getSafePath('/../secret.txt'), '/secret.txt');
+});

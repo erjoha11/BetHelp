@@ -21,6 +21,7 @@ const {
   parseLegs,
   extractBetFromScreenshot,
   parseBetBlocks,
+  parseMarketText,
   parseStake,
   parseStatus,
   parseNameFromMarketLine
@@ -317,6 +318,21 @@ test('manual bet falls back selection to name', () => {
   assert.equal(bet.selection, 'England to score');
 });
 
+test('screenshot-source bet stores market text', () => {
+  const bet = addBet({
+    source: 'screenshot',
+    name: 'Fernandes, Bruno',
+    selection: 'Fernandes, Bruno',
+    marketText: 'Spilleren scorer mal eller har malgivende (Super Sub)',
+    stake: 100,
+    odds: 2.05,
+    screenshot: '/uploads/example.png',
+    extractionStatus: 'parsed'
+  });
+
+  assert.equal(bet.marketText, 'Spilleren scorer mal eller har malgivende (Super Sub)');
+});
+
 test('extractBetFromScreenshot returns fallback structured bets for unreadable image', async () => {
   const parsed = await extractBetFromScreenshot('/this/file/does-not-exist.png');
   assert.equal(Array.isArray(parsed.bets), true);
@@ -363,6 +379,16 @@ test('parseStatus maps Vunnet/Tapt to won/lost', () => {
 test('parseNameFromMarketLine extracts player market title from line with odds', () => {
   const text = ['Fernandes, Bruno 2.05', 'Innsats 100,00 kr'].join('\n');
   assert.equal(parseNameFromMarketLine(text), 'Fernandes, Bruno');
+});
+
+test('parseMarketText extracts scoring market description', () => {
+  const text = [
+    'Fernandes, Bruno 2.05',
+    'Spilleren scorer mal eller har malgivende (Super Sub)',
+    'Portugal - Kroatia'
+  ].join('\n');
+
+  assert.equal(parseMarketText(text), 'Spilleren scorer mal eller har malgivende (Super Sub)');
 });
 
 test('parseLegs extracts stacked team lines from Oddsen-style format', () => {

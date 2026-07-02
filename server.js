@@ -122,6 +122,7 @@ function createBetsFromParsedScreenshot(fileName, parsed, placedAt) {
     addBet({
       name: entry.name,
       selection: entry.selection,
+      marketText: entry.marketText,
       stake: entry.stake,
       odds: entry.odds,
       status: entry.status,
@@ -144,6 +145,7 @@ function buildBetInputsFromParsedScreenshot(fileName, parsed, placedAt) {
   return extractedBets.map((entry) => ({
     name: entry.name,
     selection: entry.selection,
+    marketText: entry.marketText,
     stake: entry.stake,
     odds: entry.odds,
     status: entry.status,

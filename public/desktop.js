@@ -173,6 +173,7 @@ function getFilteredBets() {
     const searchable = [
       bet.name,
       bet.selection,
+      bet.marketText,
       site,
       bet.scenario,
       bet.betType,
@@ -224,6 +225,7 @@ function renderTableRows(bets) {
       const scenarioLabel = bet.scenario || 'unknown';
       const siteLabel = escapeHtml(bet.bookmaker || 'unknown-site');
       const selectionText = escapeHtml(bet.selection || '-');
+      const marketText = escapeHtml(bet.marketText || '');
       const legsSummary = legs.length
         ? legs
             .slice(0, 2)
@@ -231,7 +233,7 @@ function renderTableRows(bets) {
             .join(' | ')
         : 'No game breakdown';
       const selectionLabel = bet.selection ? `selection: ${bet.selection}` : 'selection: -';
-      const fullBetSummary = `${bet.name} | ${selectionLabel} | ${typeLabel} | ${scenarioLabel} | ${legsSummary}`;
+      const fullBetSummary = `${bet.name} | ${selectionLabel} | market: ${bet.marketText || '-'} | ${typeLabel} | ${scenarioLabel} | ${legsSummary}`;
       const escapedLegsSummary = escapeHtml(legsSummary);
       const escapedTypeLabel = escapeHtml(typeLabel);
       const escapedScenarioLabel = escapeHtml(scenarioLabel);
@@ -242,7 +244,7 @@ function renderTableRows(bets) {
           <td class="sticky-col sticky-bet col-bet">
             <div class="bet-cell">
               <button type="button" class="bet-main bet-expand" title="${escapeHtml(fullBetSummary)}">${escapeHtml(bet.name)}</button>
-              <p class="bet-subline">${escapedLegsSummary}</p>
+              <p class="bet-subline">${marketText || escapedLegsSummary}</p>
               <div class="bet-tags">
                 <span class="bet-tag">${escapedTypeLabel}</span>
                 <span class="bet-tag">${escapedScenarioLabel}</span>

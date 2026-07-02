@@ -24,6 +24,7 @@
   "homepage": "https://github.com/erjoha11/BetHelp#readme",
   "dependencies": {
     "express": "^5.2.1",
-    "multer": "^2.2.0"
+    "multer": "^2.2.0",
+    "tesseract.js": "^7.0.0"
   }
 }

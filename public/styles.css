@@ -135,12 +135,6 @@ button.secondary:hover {
   color: #b42318;
 }
 
-.two-col {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.8rem;
-}
-
 .stats-grid {
   display: grid;
   gap: 0.7rem;
@@ -210,9 +204,5 @@ th {
 
   .hero {
     padding: 1.6rem;
-  }
-
-  .two-col {
-    grid-template-columns: 1fr 1fr;
   }
 }

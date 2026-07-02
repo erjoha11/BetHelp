@@ -10,6 +10,7 @@ const {
   updateBetStatus,
   validateStatus
 } = require('./lib/betStore');
+const { extractBetFromScreenshot } = require('./lib/ocrParser');
 
 const publicDir = path.join(__dirname, 'public');
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -90,29 +91,34 @@ app.post('/api/bets', (req, res) => {
 });
 
 app.post('/api/bets/upload', upload.single('screenshot'), (req, res) => {
-  try {
+  Promise.resolve()
+    .then(async () => {
     if (!req.file) {
       res.status(400).json({ error: 'Screenshot file is required' });
       return;
     }
 
+      const parsed = await extractBetFromScreenshot(req.file.path);
+
     const bet = addBet({
-      name: req.body?.name,
-      stake: req.body?.stake,
-      odds: req.body?.odds,
+        name: parsed.name,
+        stake: parsed.stake,
+        odds: parsed.odds,
       placedAt: req.body?.placedAt,
       source: 'screenshot',
+        extractionStatus: parsed.extractionStatus,
       screenshot: `/uploads/${req.file.filename}`
     });
 
     res.status(201).json({ bet });
-  } catch (error) {
-    if (req.file?.path) {
-      fs.unlinkSync(req.file.path);
-    }
+    })
+    .catch((error) => {
+      if (req.file?.path) {
+        fs.unlinkSync(req.file.path);
+      }
 
-    res.status(400).json({ error: error.message });
-  }
+      res.status(400).json({ error: error.message });
+    });
 });
 
 app.patch('/api/bets/:id/status', (req, res) => {

@@ -6,7 +6,7 @@ const screenshotInput = typeof document !== 'undefined' ? document.getElementByI
 const pasteButton = typeof document !== 'undefined' ? document.getElementById('paste-button') : null;
 const pasteTarget = typeof document !== 'undefined' ? document.getElementById('paste-target') : null;
 
-const formatCurrency = (value) => `$${value.toFixed(2)}`;
+const formatCurrency = (value) => `${value.toFixed(2)} Kr`;
 
 function createBetLine(name, stake, odds) {
   const payout = stake * odds;
@@ -111,6 +111,7 @@ function renderBets(bets) {
           <td>
             <strong>${bet.name}</strong>
             <div class="meta">${formatDateTime(bet.placedAt)}</div>
+            <div class="meta">Extraction: ${bet.extractionStatus || 'unknown'}</div>
           </td>
           <td>${formatCurrency(bet.stake)}</td>
           <td>${Number(bet.odds).toFixed(2)}</td>
@@ -190,7 +191,7 @@ if (form && list) {
       }
 
       form.reset();
-      setMessage('Bet saved successfully.');
+      setMessage('Bet imported from screenshot.');
       await refreshData();
     } catch (error) {
       setMessage(error.message, true);

@@ -23,6 +23,24 @@ let desktopBets = [];
 
 const formatCurrency = (value) => `${Number(value || 0).toFixed(2)} Kr`;
 
+function formatSignedCurrency(value) {
+  const amount = Number(value || 0);
+  const sign = amount > 0 ? '+' : '';
+  return `${sign}${formatCurrency(amount)}`;
+}
+
+function getSettledProfit(bet) {
+  if (bet.status === 'won') {
+    return Number(bet.profit || 0);
+  }
+
+  if (bet.status === 'lost') {
+    return -Number(bet.stake || 0);
+  }
+
+  return 0;
+}
+
 function setMessage(text, isError = false) {
   if (!desktopMessage) {
     return;
@@ -177,33 +195,40 @@ function renderTableRows(bets) {
   }
 
   if (!bets.length) {
-    desktopList.innerHTML = '<tr><td colspan="9" class="empty">No bets match current filters.</td></tr>';
+    desktopList.innerHTML = '<tr><td colspan="14" class="empty">No bets match current filters.</td></tr>';
     return;
   }
 
   desktopList.innerHTML = bets
     .map((bet) => {
       const legs = Array.isArray(bet.legs) ? bet.legs : [];
+      const gamesCount = legs.length;
+      const payout = Number(bet.stake || 0) * Number(bet.odds || 0);
+      const settled = getSettledProfit(bet);
       const legsMarkup = legs.length
         ? `<ul class="legs-list">${legs.map((leg) => `<li>${leg.homeTeam} vs ${leg.awayTeam}</li>`).join('')}</ul>`
         : '';
 
       return `
-        <tr>
+        <tr class="history-row">
+          <td class="id-cell">${bet.id}</td>
           <td>
             <strong>${bet.name}</strong>
-            <div class="meta">${formatDateTime(bet.placedAt)}</div>
             <div class="meta">Scenario: ${bet.scenario || 'unknown'}</div>
-            <div class="meta">Confidence: ${Number(bet.confidenceScore || 0).toFixed(2)}</div>
             ${legsMarkup}
           </td>
+          <td>${formatDateTime(bet.placedAt)}</td>
           <td>${bet.bookmaker || 'unknown-site'}</td>
           <td>${bet.betType || 'single'}</td>
+          <td>${gamesCount || '-'}</td>
           <td>${formatCurrency(bet.stake)}</td>
           <td>${Number(bet.odds || 0).toFixed(2)}</td>
+          <td>${formatCurrency(payout)}</td>
           <td>${formatCurrency(bet.profit)}</td>
+          <td class="${settled > 0 ? 'pos' : settled < 0 ? 'neg' : 'neu'}">${formatSignedCurrency(settled)}</td>
+          <td>${Number(bet.confidenceScore || 0).toFixed(2)}</td>
           <td>
-            <select class="desktop-status-select" data-id="${bet.id}">
+            <select class="desktop-status-select status-${bet.status}" data-id="${bet.id}">
               <option value="pending" ${bet.status === 'pending' ? 'selected' : ''}>Pending</option>
               <option value="won" ${bet.status === 'won' ? 'selected' : ''}>Won</option>
               <option value="lost" ${bet.status === 'lost' ? 'selected' : ''}>Lost</option>

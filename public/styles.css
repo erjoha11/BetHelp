@@ -1,11 +1,15 @@
 :root {
-  --bg: #f7f9fc;
+  --bg: #f2f7f6;
   --panel: #ffffff;
-  --text: #172338;
-  --muted: #5f6c80;
-  --line: #d9e1ee;
-  --accent: #0f9d58;
-  --accent-dark: #0a7240;
+  --text: #152230;
+  --muted: #587083;
+  --line: #d7e2e7;
+  --accent: #0b8f6a;
+  --accent-dark: #07664b;
+  --ink-soft: #2f4557;
+  --good: #0f7b46;
+  --bad: #b42318;
+  --flat: #687686;
 }
 
 * {
@@ -14,11 +18,11 @@
 
 body {
   margin: 0;
-  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-family: 'Avenir Next', 'Gill Sans', 'Segoe UI', sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at top right, #e7f6ec 0%, transparent 36%),
-    radial-gradient(circle at bottom left, #deebff 0%, transparent 36%),
+    radial-gradient(circle at top right, #dcf5ee 0%, transparent 38%),
+    radial-gradient(circle at bottom left, #dff0fd 0%, transparent 38%),
     var(--bg);
 }
 
@@ -31,11 +35,11 @@ body {
 }
 
 .hero {
-  background: linear-gradient(120deg, #0f9d58, #167944);
+  background: linear-gradient(122deg, #0b8f6a, #1f7a8b);
   color: #fff;
-  border-radius: 14px;
+  border-radius: 18px;
   padding: 1.1rem;
-  box-shadow: 0 8px 22px rgb(12 100 58 / 25%);
+  box-shadow: 0 14px 34px rgb(16 96 82 / 28%);
 }
 
 .hero h1,
@@ -58,9 +62,10 @@ body {
 
 .panel {
   background: var(--panel);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 1rem;
   border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgb(19 44 64 / 6%);
 }
 
 .panel h2 {
@@ -85,10 +90,17 @@ button,
 select {
   width: 100%;
   padding: 0.64rem 0.7rem;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--line);
   font: inherit;
   background: #fff;
+}
+
+input:focus,
+select:focus,
+button:focus {
+  outline: 2px solid #8fdac4;
+  outline-offset: 1px;
 }
 
 button {
@@ -97,10 +109,13 @@ button {
   color: #fff;
   font-weight: 700;
   cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
 }
 
 button:hover {
   background: var(--accent-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgb(5 81 58 / 22%);
 }
 
 button.secondary {
@@ -161,9 +176,9 @@ button.danger:hover {
 
 .stat {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 0.7rem;
-  background: #fafcff;
+  background: linear-gradient(180deg, #fbfdff 0%, #f4f8fb 100%);
 }
 
 .stat h3 {
@@ -181,6 +196,8 @@ button.danger:hover {
 
 .table-wrap {
   overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
 }
 
 .history-toolbar {
@@ -243,19 +260,20 @@ button.danger:hover {
 }
 
 .desktop-table-wrap table {
-  min-width: 980px;
+  min-width: 1320px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 780px;
+  min-width: 1160px;
+  background: #fff;
 }
 
 th,
 td {
   text-align: left;
-  padding: 0.65rem;
+  padding: 0.68rem;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
 }
@@ -265,12 +283,84 @@ th {
   font-size: 0.78rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  position: sticky;
+  top: 0;
+  background: #f3f8fb;
+  z-index: 1;
+}
+
+tbody tr:nth-child(odd) {
+  background: #fcfeff;
+}
+
+tbody tr:hover {
+  background: #eff7fb;
 }
 
 .meta {
   margin-top: 0.2rem;
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+.id-cell {
+  color: var(--ink-soft);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.2rem 0.52rem;
+  border-radius: 999px;
+  background: #e6f6f1;
+  color: #066345;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.pos {
+  color: var(--good);
+  font-weight: 700;
+}
+
+.neg {
+  color: var(--bad);
+  font-weight: 700;
+}
+
+.neu {
+  color: var(--flat);
+  font-weight: 700;
+}
+
+.status-select,
+.desktop-status-select {
+  min-width: 110px;
+  font-weight: 700;
+  border-width: 2px;
+}
+
+.status-select.status-won,
+.desktop-status-select.status-won {
+  border-color: #92dfbf;
+  background: #ecfaf3;
+  color: #0f7b46;
+}
+
+.status-select.status-lost,
+.desktop-status-select.status-lost {
+  border-color: #f1aaa3;
+  background: #fef0ef;
+  color: #b42318;
+}
+
+.status-select.status-pending,
+.desktop-status-select.status-pending {
+  border-color: #b8c8d8;
+  background: #f5f8fc;
+  color: #425b70;
 }
 
 .legs-list {
@@ -300,5 +390,19 @@ th {
 
   .history-toolbar {
     grid-template-columns: 2fr 1fr 1fr;
+  }
+}
+
+@media (max-width: 759px) {
+  table {
+    min-width: 980px;
+  }
+
+  .hero {
+    border-radius: 14px;
+  }
+
+  .panel {
+    border-radius: 12px;
   }
 }

@@ -19,6 +19,24 @@ let allBets = [];
 
 const formatCurrency = (value) => `${value.toFixed(2)} Kr`;
 
+function formatSignedCurrency(value) {
+  const amount = Number(value || 0);
+  const sign = amount > 0 ? '+' : '';
+  return `${sign}${formatCurrency(amount)}`;
+}
+
+function getSettledProfit(bet) {
+  if (bet.status === 'won') {
+    return Number(bet.profit || 0);
+  }
+
+  if (bet.status === 'lost') {
+    return -Number(bet.stake || 0);
+  }
+
+  return 0;
+}
+
 function createBetLine(name, stake, odds) {
   const payout = stake * odds;
   const profit = payout - stake;
@@ -180,7 +198,7 @@ function renderBets(bets) {
 
   if (!bets.length) {
     list.innerHTML =
-      '<tr><td colspan="7" class="empty">No matching bets. Try changing filters or upload a new screenshot.</td></tr>';
+      '<tr><td colspan="13" class="empty">No matching bets. Try changing filters or upload a new screenshot.</td></tr>';
     return;
   }
 
@@ -188,6 +206,9 @@ function renderBets(bets) {
     .map(
       (bet) => {
         const legs = Array.isArray(bet.legs) ? bet.legs : [];
+        const gamesCount = legs.length;
+        const payout = Number(bet.stake || 0) * Number(bet.odds || 0);
+        const settled = getSettledProfit(bet);
         const legsMarkup = legs.length
           ? `<ul class="legs-list">${legs
               .map(
@@ -198,22 +219,26 @@ function renderBets(bets) {
           : '';
 
         return `
-        <tr>
+        <tr class="history-row">
+          <td class="id-cell">${bet.id}</td>
           <td>
             <strong>${bet.name}</strong>
-            <div class="meta">${formatDateTime(bet.placedAt)}</div>
-            <div class="meta">Site: ${bet.bookmaker || 'unknown-site'}</div>
             <div class="meta">Scenario: ${bet.scenario || 'unknown'}</div>
             <div class="meta">Type: ${bet.betType || 'single'}${legs.length ? ` (${legs.length} games)` : ''}</div>
             <div class="meta">Extraction: ${bet.extractionStatus || 'unknown'}</div>
-            <div class="meta">Confidence: ${Number(bet.confidenceScore || 0).toFixed(2)}</div>
             ${legsMarkup}
           </td>
+          <td>${formatDateTime(bet.placedAt)}</td>
+          <td><span class="pill">${bet.bookmaker || 'unknown-site'}</span></td>
+          <td>${gamesCount || '-'}</td>
           <td>${formatCurrency(bet.stake)}</td>
           <td>${Number(bet.odds).toFixed(2)}</td>
+          <td>${formatCurrency(payout)}</td>
           <td>${formatCurrency(bet.profit)}</td>
+          <td class="${settled > 0 ? 'pos' : settled < 0 ? 'neg' : 'neu'}">${formatSignedCurrency(settled)}</td>
+          <td>${Number(bet.confidenceScore || 0).toFixed(2)}</td>
           <td>
-            <select class="status-select" data-id="${bet.id}">
+            <select class="status-select status-${bet.status}" data-id="${bet.id}">
               <option value="pending" ${bet.status === 'pending' ? 'selected' : ''}>Pending</option>
               <option value="won" ${bet.status === 'won' ? 'selected' : ''}>Won</option>
               <option value="lost" ${bet.status === 'lost' ? 'selected' : ''}>Lost</option>

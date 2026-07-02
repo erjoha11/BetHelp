@@ -299,26 +299,75 @@ function renderSummary(filteredCount, totalCount) {
   desktopSummary.textContent = `Showing ${filteredCount} of ${totalCount} bets`;
 }
 
+function computeStatsFromBets(bets) {
+  const stats = {
+    totalBets: bets.length,
+    pendingBets: 0,
+    wonBets: 0,
+    lostBets: 0,
+    totalStake: 0,
+    potentialProfit: 0,
+    settledStake: 0,
+    settledProfit: 0,
+    roiPercent: 0
+  };
+
+  for (const bet of bets) {
+    const stake = Number(bet.stake || 0);
+    const odds = Number(bet.odds || 0);
+    const payout = Number(bet.payout || stake * odds);
+    const profit = Number(bet.profit || payout - stake);
+
+    stats.totalStake += stake;
+    stats.potentialProfit += profit;
+
+    if (bet.status === 'pending') {
+      stats.pendingBets += 1;
+      continue;
+    }
+
+    stats.settledStake += stake;
+
+    if (bet.status === 'won') {
+      stats.wonBets += 1;
+      stats.settledProfit += profit;
+    } else {
+      stats.lostBets += 1;
+      stats.settledProfit -= stake;
+    }
+  }
+
+  if (stats.settledStake > 0) {
+    stats.roiPercent = Number(((stats.settledProfit / stats.settledStake) * 100).toFixed(2));
+  }
+
+  stats.totalStake = Number(stats.totalStake.toFixed(2));
+  stats.potentialProfit = Number(stats.potentialProfit.toFixed(2));
+  stats.settledStake = Number(stats.settledStake.toFixed(2));
+  stats.settledProfit = Number(stats.settledProfit.toFixed(2));
+
+  return stats;
+}
+
 function refreshDesktopTable() {
   const filtered = getFilteredBets();
   renderTableRows(filtered);
   applyDesktopColumnVisibility();
   applyDesktopDensity();
   renderSummary(filtered.length, desktopBets.length);
+  renderStats(computeStatsFromBets(filtered));
+  renderSiteCards(filtered);
 }
 
 async function refreshDesktopData() {
-  const [betsResponse, statsResponse] = await Promise.all([fetch('/api/bets'), fetch('/api/stats')]);
-  if (!betsResponse.ok || !statsResponse.ok) {
+  const betsResponse = await fetch('/api/bets');
+  if (!betsResponse.ok) {
     throw new Error('Could not load desktop view data');
   }
 
   const betsPayload = await betsResponse.json();
-  const statsPayload = await statsResponse.json();
   desktopBets = betsPayload.bets || [];
   updateSiteFilterOptions(desktopBets);
-  renderSiteCards(desktopBets);
-  renderStats(statsPayload.stats || {});
   refreshDesktopTable();
 }
 

@@ -179,6 +179,65 @@ function renderHistorySummary(filteredCount, totalCount) {
   historySummary.textContent = `Showing ${filteredCount} of ${totalCount} bets`;
 }
 
+function computeStatsFromBets(bets) {
+  const stats = {
+    totalBets: bets.length,
+    pendingBets: 0,
+    wonBets: 0,
+    lostBets: 0,
+    totalStake: 0,
+    potentialPayout: 0,
+    potentialProfit: 0,
+    settledStake: 0,
+    settledProfit: 0,
+    averageOdds: 0,
+    roiPercent: 0
+  };
+
+  for (const bet of bets) {
+    const stake = Number(bet.stake || 0);
+    const odds = Number(bet.odds || 0);
+    const payout = Number(bet.payout || stake * odds);
+    const profit = Number(bet.profit || payout - stake);
+
+    stats.totalStake += stake;
+    stats.potentialPayout += payout;
+    stats.potentialProfit += profit;
+
+    if (bet.status === 'pending') {
+      stats.pendingBets += 1;
+      continue;
+    }
+
+    stats.settledStake += stake;
+
+    if (bet.status === 'won') {
+      stats.wonBets += 1;
+      stats.settledProfit += profit;
+    } else {
+      stats.lostBets += 1;
+      stats.settledProfit -= stake;
+    }
+  }
+
+  if (bets.length > 0) {
+    const sumOdds = bets.reduce((acc, bet) => acc + Number(bet.odds || 0), 0);
+    stats.averageOdds = Number((sumOdds / bets.length).toFixed(2));
+  }
+
+  if (stats.settledStake > 0) {
+    stats.roiPercent = Number(((stats.settledProfit / stats.settledStake) * 100).toFixed(2));
+  }
+
+  stats.totalStake = Number(stats.totalStake.toFixed(2));
+  stats.potentialPayout = Number(stats.potentialPayout.toFixed(2));
+  stats.potentialProfit = Number(stats.potentialProfit.toFixed(2));
+  stats.settledStake = Number(stats.settledStake.toFixed(2));
+  stats.settledProfit = Number(stats.settledProfit.toFixed(2));
+
+  return stats;
+}
+
 function renderStats(stats) {
   if (!statsGrid) {
     return;
@@ -302,24 +361,20 @@ function refreshHistoryPanel() {
   applyHistoryColumnVisibility();
   applyHistoryDensity();
   renderHistorySummary(filtered.length, allBets.length);
+  renderStats(computeStatsFromBets(filtered));
 }
 
 async function refreshData() {
-  const [betsResponse, statsResponse] = await Promise.all([
-    fetch('/api/bets'),
-    fetch('/api/stats')
-  ]);
+  const betsResponse = await fetch('/api/bets');
 
-  if (!betsResponse.ok || !statsResponse.ok) {
+  if (!betsResponse.ok) {
     throw new Error('Failed to load data from server');
   }
 
   const betsPayload = await betsResponse.json();
-  const statsPayload = await statsResponse.json();
   allBets = betsPayload.bets || [];
   buildSiteFilterOptions(allBets);
   refreshHistoryPanel();
-  renderStats(statsPayload.stats || {});
 }
 
 async function updateBetStatus(id, status) {

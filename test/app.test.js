@@ -285,6 +285,7 @@ test('screenshot-source bet stores extracted multi-game legs', () => {
   const bet = addBet({
     source: 'screenshot',
     name: 'Arsenal vs Chelsea + 1 more game',
+    selection: 'Arsenal',
     stake: 100,
     odds: 2.24,
     bookmaker: 'bet365',
@@ -301,8 +302,19 @@ test('screenshot-source bet stores extracted multi-game legs', () => {
   assert.equal(bet.betType, 'multi');
   assert.equal(bet.bookmaker, 'bet365');
   assert.equal(bet.scenario, 'multi-game');
+  assert.equal(bet.selection, 'Arsenal');
   assert.equal(bet.legs.length, 2);
   assert.equal(bet.legs[0].homeTeam, 'Arsenal');
+});
+
+test('manual bet falls back selection to name', () => {
+  const bet = addBet({
+    name: 'England to score',
+    stake: 100,
+    odds: 2
+  });
+
+  assert.equal(bet.selection, 'England to score');
 });
 
 test('extractBetFromScreenshot returns fallback structured bets for unreadable image', async () => {

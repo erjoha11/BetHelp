@@ -172,6 +172,7 @@ function getFilteredBets() {
     const legs = Array.isArray(bet.legs) ? bet.legs : [];
     const searchable = [
       bet.name,
+      bet.selection,
       site,
       bet.scenario,
       bet.betType,
@@ -227,7 +228,8 @@ function renderTableRows(bets) {
             .map((leg) => `${leg.homeTeam} vs ${leg.awayTeam}`)
             .join(' | ')
         : 'No game breakdown';
-      const fullBetSummary = `${bet.name} | ${typeLabel} | ${scenarioLabel} | ${legsSummary}`;
+      const selectionLabel = bet.selection ? `selection: ${bet.selection}` : 'selection: -';
+      const fullBetSummary = `${bet.name} | ${selectionLabel} | ${typeLabel} | ${scenarioLabel} | ${legsSummary}`;
 
       return `
         <tr class="history-row">

@@ -158,6 +158,7 @@ function getFilteredBets() {
     const legs = Array.isArray(bet.legs) ? bet.legs : [];
     const haystack = [
       bet.name,
+      bet.selection,
       site,
       bet.scenario,
       bet.betType,
@@ -230,7 +231,8 @@ function renderBets(bets) {
               .map((leg) => `${leg.homeTeam} vs ${leg.awayTeam}`)
               .join(' | ')
           : 'No game breakdown';
-        const fullBetSummary = `${bet.name} | ${typeLabel} | ${extractionLabel} | ${legsSummary}`;
+        const selectionLabel = bet.selection ? `selection: ${bet.selection}` : 'selection: -';
+        const fullBetSummary = `${bet.name} | ${selectionLabel} | ${typeLabel} | ${extractionLabel} | ${legsSummary}`;
 
         return `
         <tr class="history-row">

@@ -78,6 +78,7 @@ function createBetsFromParsedScreenshot(fileName, parsed, placedAt) {
       name: entry.name,
       stake: entry.stake,
       odds: entry.odds,
+      status: entry.status,
       legs: entry.legs,
       betType: entry.betType,
       bookmaker: entry.bookmaker || parsed.bookmaker,

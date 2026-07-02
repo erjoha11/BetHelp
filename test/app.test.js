@@ -17,7 +17,13 @@ fs.writeFileSync(testDataFile, JSON.stringify({ nextId: 1, bets: [] }, null, 2))
 const { createBetLine } = require('../public/app.js');
 const { getSafePath, server } = require('../server.js');
 const { addBet } = require('../lib/betStore');
-const { parseLegs, extractBetFromScreenshot, parseBetBlocks } = require('../lib/ocrParser');
+const {
+  parseLegs,
+  extractBetFromScreenshot,
+  parseBetBlocks,
+  parseStake,
+  parseStatus
+} = require('../lib/ocrParser');
 
 function requestJson(instance, { method, pathName, payload }) {
   return new Promise((resolve, reject) => {
@@ -276,4 +282,15 @@ test('parseBetBlocks splits ComeOn singel cards into multiple bets', () => {
   assert.equal(blocks[0].includes('Odegaard'), true);
   assert.equal(blocks[1].includes('Haaland'), true);
   assert.equal(blocks[2].includes('Uavgjort'), true);
+});
+
+test('parseStake reads Norwegian Innsats value', () => {
+  const text = ['Tapt Singel', 'Innsats', '400,00 kr'].join('\n');
+  assert.equal(parseStake(text), 400);
+});
+
+test('parseStatus maps Vunnet/Tapt to won/lost', () => {
+  assert.equal(parseStatus('Vunnet Singel'), 'won');
+  assert.equal(parseStatus('Tapt Singel'), 'lost');
+  assert.equal(parseStatus('Singel'), 'pending');
 });

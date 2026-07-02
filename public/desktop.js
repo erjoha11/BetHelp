@@ -18,6 +18,11 @@ const desktopReprocess =
   typeof document !== 'undefined' ? document.getElementById('desktop-reprocess') : null;
 const desktopMessage =
   typeof document !== 'undefined' ? document.getElementById('desktop-message') : null;
+const desktopDensity = typeof document !== 'undefined' ? document.getElementById('desktop-density') : null;
+const desktopTableWrap =
+  typeof document !== 'undefined' ? document.querySelector('.desktop-table-wrap') : null;
+const desktopColumnToggles =
+  typeof document !== 'undefined' ? document.querySelectorAll('[data-desktop-col]') : [];
 
 let desktopBets = [];
 
@@ -226,20 +231,20 @@ function renderTableRows(bets) {
 
       return `
         <tr class="history-row">
-          <td class="id-cell">${bet.id}</td>
-          <td>
+          <td class="id-cell sticky-col sticky-id col-id">${bet.id}</td>
+          <td class="sticky-col sticky-bet col-bet">
             <button type="button" class="bet-main bet-expand" title="${escapeHtml(fullBetSummary)}">${escapeHtml(bet.name)}</button>
           </td>
-          <td>${formatDateTime(bet.placedAt)}</td>
+          <td class="col-placed">${formatDateTime(bet.placedAt)}</td>
           <td>${bet.bookmaker || 'unknown-site'}</td>
           <td>${bet.betType || 'single'}</td>
           <td>${gamesCount || '-'}</td>
           <td>${formatCurrency(bet.stake)}</td>
           <td>${Number(bet.odds || 0).toFixed(2)}</td>
-          <td>${formatCurrency(payout)}</td>
-          <td>${formatCurrency(bet.profit)}</td>
+          <td class="col-payout">${formatCurrency(payout)}</td>
+          <td class="col-profit">${formatCurrency(bet.profit)}</td>
           <td class="${settled > 0 ? 'pos' : settled < 0 ? 'neg' : 'neu'}">${formatSignedCurrency(settled)}</td>
-          <td>${Number(bet.confidenceScore || 0).toFixed(2)}</td>
+          <td class="col-confidence">${Number(bet.confidenceScore || 0).toFixed(2)}</td>
           <td>
             <select class="desktop-status-select status-${bet.status}" data-id="${bet.id}">
               <option value="pending" ${bet.status === 'pending' ? 'selected' : ''}>Pending</option>
@@ -248,11 +253,40 @@ function renderTableRows(bets) {
             </select>
           </td>
           <td>${bet.screenshot ? `<a href="${bet.screenshot}" target="_blank" rel="noopener noreferrer">View</a>` : '-'}</td>
-          <td><button type="button" class="danger desktop-delete" data-id="${bet.id}">Delete</button></td>
+          <td><button type="button" class="desktop-delete action-btn" data-id="${bet.id}" aria-label="Delete bet ${bet.id}">Delete</button></td>
         </tr>
       `;
     })
     .join('');
+}
+
+function applyDesktopColumnVisibility() {
+  for (const input of desktopColumnToggles) {
+    if (!(input instanceof HTMLInputElement)) {
+      continue;
+    }
+
+    const key = input.dataset.desktopCol;
+    if (!key) {
+      continue;
+    }
+
+    const isVisible = input.checked;
+    document.querySelectorAll(`.col-${key}`).forEach((cell) => {
+      if (!(cell instanceof HTMLElement)) {
+        return;
+      }
+      cell.style.display = isVisible ? '' : 'none';
+    });
+  }
+}
+
+function applyDesktopDensity() {
+  if (!desktopTableWrap || !desktopDensity) {
+    return;
+  }
+
+  desktopTableWrap.classList.toggle('density-comfortable', desktopDensity.value === 'comfortable');
 }
 
 function renderSummary(filteredCount, totalCount) {
@@ -266,6 +300,8 @@ function renderSummary(filteredCount, totalCount) {
 function refreshDesktopTable() {
   const filtered = getFilteredBets();
   renderTableRows(filtered);
+  applyDesktopColumnVisibility();
+  applyDesktopDensity();
   renderSummary(filtered.length, desktopBets.length);
 }
 
@@ -361,6 +397,10 @@ if (desktopList) {
   desktopSearch?.addEventListener('input', filterHandler);
   desktopStatusFilter?.addEventListener('change', filterHandler);
   desktopSiteFilter?.addEventListener('change', filterHandler);
+  desktopDensity?.addEventListener('change', applyDesktopDensity);
+  desktopColumnToggles.forEach((input) => {
+    input.addEventListener('change', applyDesktopColumnVisibility);
+  });
 
   refreshDesktopData().catch((error) => {
     setMessage(error.message, true);

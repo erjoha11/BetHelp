@@ -212,6 +212,55 @@ button.danger:hover {
   font-size: 0.9rem;
 }
 
+.table-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.55rem;
+}
+
+.density-control {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.density-control select {
+  width: auto;
+  min-width: 120px;
+  padding: 0.4rem 0.55rem;
+}
+
+.column-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.column-toggles label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #345064;
+  border: 1px solid #d3dfe8;
+  background: #f5f9fc;
+  border-radius: 999px;
+  padding: 0.22rem 0.5rem;
+}
+
+.column-toggles input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
 .desktop-layout {
   max-width: 1240px;
 }
@@ -287,6 +336,27 @@ th {
   top: 0;
   background: #f3f8fb;
   z-index: 1;
+}
+
+.sticky-col {
+  position: sticky;
+  z-index: 2;
+  background: inherit;
+}
+
+.sticky-id {
+  left: 0;
+  min-width: 68px;
+}
+
+.sticky-bet {
+  left: 68px;
+  min-width: 220px;
+}
+
+thead .sticky-col {
+  z-index: 3;
+  background: #f3f8fb;
 }
 
 tbody tr:nth-child(odd) {
@@ -370,6 +440,34 @@ tbody tr:hover {
   border-width: 2px;
 }
 
+.action-btn {
+  min-width: 78px;
+  width: auto;
+  margin: 0;
+  padding: 0.4rem 0.56rem;
+  border-radius: 8px;
+  border: 1px solid #efb2ab;
+  background: #fff6f5;
+  color: #b42318;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.action-btn:hover {
+  background: #ffeaea;
+  color: #8f1f14;
+  transform: none;
+  box-shadow: none;
+}
+
+.table-wrap.density-comfortable th,
+.table-wrap.density-comfortable td,
+.desktop-table-wrap.density-comfortable th,
+.desktop-table-wrap.density-comfortable td {
+  padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
+}
+
 .status-select.status-won,
 .desktop-status-select.status-won {
   border-color: #92dfbf;
@@ -432,5 +530,14 @@ tbody tr:hover {
 
   .panel {
     border-radius: 12px;
+  }
+
+  .table-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sticky-bet {
+    min-width: 190px;
   }
 }

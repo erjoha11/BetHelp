@@ -64,22 +64,37 @@
             <option value="all">All sites</option>
           </select>
         </div>
+        <div class="table-controls">
+          <label class="density-control" for="history-density">
+            Density
+            <select id="history-density">
+              <option value="compact">Compact</option>
+              <option value="comfortable">Comfortable</option>
+            </select>
+          </label>
+          <div class="column-toggles">
+            <label><input type="checkbox" data-history-col="placed" checked /> Placed</label>
+            <label><input type="checkbox" data-history-col="payout" checked /> Payout</label>
+            <label><input type="checkbox" data-history-col="profit" checked /> Potential</label>
+            <label><input type="checkbox" data-history-col="confidence" checked /> Confidence</label>
+          </div>
+        </div>
         <p id="history-summary" class="history-summary"></p>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Bet</th>
-                <th>Placed</th>
+                <th class="sticky-col sticky-id col-id">ID</th>
+                <th class="sticky-col sticky-bet col-bet">Bet</th>
+                <th class="col-placed">Placed</th>
                 <th>Site</th>
                 <th>Games</th>
                 <th>Stake</th>
                 <th>Odds</th>
-                <th>Payout</th>
-                <th>Potential Profit</th>
+                <th class="col-payout">Payout</th>
+                <th class="col-profit">Potential Profit</th>
                 <th>Settled</th>
-                <th>Confidence</th>
+                <th class="col-confidence">Confidence</th>
                 <th>Status</th>
                 <th>Slip</th>
                 <th>Actions</th>

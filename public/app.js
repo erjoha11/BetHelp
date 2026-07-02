@@ -14,6 +14,10 @@ const historyStatusFilter =
 const historySiteFilter =
   typeof document !== 'undefined' ? document.getElementById('history-site-filter') : null;
 const historySummary = typeof document !== 'undefined' ? document.getElementById('history-summary') : null;
+const historyDensity = typeof document !== 'undefined' ? document.getElementById('history-density') : null;
+const historyTableWrap = typeof document !== 'undefined' ? document.querySelector('.table-wrap') : null;
+const historyColumnToggles =
+  typeof document !== 'undefined' ? document.querySelectorAll('[data-history-col]') : [];
 
 let allBets = [];
 
@@ -230,19 +234,19 @@ function renderBets(bets) {
 
         return `
         <tr class="history-row">
-          <td class="id-cell">${bet.id}</td>
-          <td>
+          <td class="id-cell sticky-col sticky-id col-id">${bet.id}</td>
+          <td class="sticky-col sticky-bet col-bet">
             <button type="button" class="bet-main bet-expand" title="${escapeHtml(fullBetSummary)}">${escapeHtml(bet.name)}</button>
           </td>
-          <td>${formatDateTime(bet.placedAt)}</td>
+          <td class="col-placed">${formatDateTime(bet.placedAt)}</td>
           <td><span class="pill">${bet.bookmaker || 'unknown-site'}</span></td>
           <td>${gamesCount || '-'}</td>
           <td>${formatCurrency(bet.stake)}</td>
           <td>${Number(bet.odds).toFixed(2)}</td>
-          <td>${formatCurrency(payout)}</td>
-          <td>${formatCurrency(bet.profit)}</td>
+          <td class="col-payout">${formatCurrency(payout)}</td>
+          <td class="col-profit">${formatCurrency(bet.profit)}</td>
           <td class="${settled > 0 ? 'pos' : settled < 0 ? 'neg' : 'neu'}">${formatSignedCurrency(settled)}</td>
-          <td>${Number(bet.confidenceScore || 0).toFixed(2)}</td>
+          <td class="col-confidence">${Number(bet.confidenceScore || 0).toFixed(2)}</td>
           <td>
             <select class="status-select status-${bet.status}" data-id="${bet.id}">
               <option value="pending" ${bet.status === 'pending' ? 'selected' : ''}>Pending</option>
@@ -253,9 +257,7 @@ function renderBets(bets) {
           <td>
             ${bet.screenshot ? `<a href="${bet.screenshot}" target="_blank" rel="noopener noreferrer">View</a>` : '-'}
           </td>
-          <td>
-            <button type="button" class="danger delete-bet" data-id="${bet.id}">Delete</button>
-          </td>
+          <td><button type="button" class="delete-bet action-btn" data-id="${bet.id}" aria-label="Delete bet ${bet.id}">Delete</button></td>
         </tr>
       `;
       }
@@ -263,9 +265,40 @@ function renderBets(bets) {
     .join('');
 }
 
+function applyHistoryColumnVisibility() {
+  for (const input of historyColumnToggles) {
+    if (!(input instanceof HTMLInputElement)) {
+      continue;
+    }
+
+    const key = input.dataset.historyCol;
+    if (!key) {
+      continue;
+    }
+
+    const isVisible = input.checked;
+    document.querySelectorAll(`.col-${key}`).forEach((cell) => {
+      if (!(cell instanceof HTMLElement)) {
+        return;
+      }
+      cell.style.display = isVisible ? '' : 'none';
+    });
+  }
+}
+
+function applyHistoryDensity() {
+  if (!historyTableWrap || !historyDensity) {
+    return;
+  }
+
+  historyTableWrap.classList.toggle('density-comfortable', historyDensity.value === 'comfortable');
+}
+
 function refreshHistoryPanel() {
   const filtered = getFilteredBets();
   renderBets(filtered);
+  applyHistoryColumnVisibility();
+  applyHistoryDensity();
   renderHistorySummary(filtered.length, allBets.length);
 }
 
@@ -438,6 +471,10 @@ if (form && list) {
   historySearch?.addEventListener('input', historyControlHandler);
   historyStatusFilter?.addEventListener('change', historyControlHandler);
   historySiteFilter?.addEventListener('change', historyControlHandler);
+  historyDensity?.addEventListener('change', applyHistoryDensity);
+  historyColumnToggles.forEach((input) => {
+    input.addEventListener('change', applyHistoryColumnVisibility);
+  });
 
   refreshData().catch((error) => {
     setMessage(error.message, true);

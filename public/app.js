@@ -2,6 +2,9 @@ const form = typeof document !== 'undefined' ? document.getElementById('upload-f
 const list = typeof document !== 'undefined' ? document.getElementById('bet-list') : null;
 const statsGrid = typeof document !== 'undefined' ? document.getElementById('stats-grid') : null;
 const formMessage = typeof document !== 'undefined' ? document.getElementById('form-message') : null;
+const screenshotInput = typeof document !== 'undefined' ? document.getElementById('screenshot') : null;
+const pasteButton = typeof document !== 'undefined' ? document.getElementById('paste-button') : null;
+const pasteTarget = typeof document !== 'undefined' ? document.getElementById('paste-target') : null;
 
 const formatCurrency = (value) => `$${value.toFixed(2)}`;
 
@@ -18,6 +21,37 @@ function setMessage(text, isError = false) {
 
   formMessage.textContent = text;
   formMessage.dataset.state = isError ? 'error' : 'success';
+}
+
+function assignImageFileToInput(file) {
+  if (!screenshotInput || !file) {
+    return false;
+  }
+
+  const transfer = new DataTransfer();
+  transfer.items.add(file);
+  screenshotInput.files = transfer.files;
+  return true;
+}
+
+function handlePasteEvent(event) {
+  const clipboardItems = event.clipboardData?.items || [];
+  for (const item of clipboardItems) {
+    if (!item.type.startsWith('image/')) {
+      continue;
+    }
+
+    const file = item.getAsFile();
+    if (!file) {
+      continue;
+    }
+
+    const namedFile = new File([file], `clipboard-${Date.now()}.png`, { type: file.type });
+    assignImageFileToInput(namedFile);
+    setMessage('Clipboard image attached. You can submit now.');
+    event.preventDefault();
+    return;
+  }
 }
 
 function formatDateTime(value) {
@@ -127,6 +161,17 @@ async function updateBetStatus(id, status) {
 }
 
 if (form && list) {
+  if (pasteButton && pasteTarget) {
+    pasteButton.addEventListener('click', () => {
+      pasteTarget.focus();
+      pasteTarget.select();
+      setMessage('Paste your screenshot now.');
+    });
+
+    pasteTarget.addEventListener('paste', handlePasteEvent);
+    form.addEventListener('paste', handlePasteEvent);
+  }
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 

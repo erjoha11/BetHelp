@@ -39,8 +39,20 @@
 
           <label>
             Screenshot
-            <input id="screenshot" name="screenshot" type="file" accept="image/*" capture="environment" required />
+            <input id="screenshot" name="screenshot" type="file" accept="image/*" required />
           </label>
+
+          <div class="paste-box">
+            <p>Or paste a screenshot from clipboard</p>
+            <button id="paste-button" type="button" class="secondary">Paste From Clipboard</button>
+            <textarea
+              id="paste-target"
+              class="paste-target"
+              rows="2"
+              readonly
+              aria-label="Paste target"
+            >Tap "Paste From Clipboard", then use iPhone Paste to attach image.</textarea>
+          </div>
 
           <button type="submit">Upload and Save Bet</button>
           <p id="form-message" class="message" aria-live="polite"></p>

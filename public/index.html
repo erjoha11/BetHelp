@@ -7,29 +7,68 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="container">
-      <h1>BetHelp</h1>
-      <p>Track a bet and instantly calculate payout/profit.</p>
+    <main class="layout">
+      <header class="hero">
+        <h1>BetHelp</h1>
+        <p>Upload betting slips from your phone, save them, and track your performance.</p>
+      </header>
 
-      <form id="bet-form">
-        <label>
-          Bet name
-          <input id="bet-name" type="text" placeholder="Team A vs Team B" required />
-        </label>
-        <label>
-          Stake ($)
-          <input id="stake" type="number" min="0.01" step="0.01" required />
-        </label>
-        <label>
-          Decimal odds
-          <input id="odds" type="number" min="1.01" step="0.01" required />
-        </label>
-        <button type="submit">Add bet</button>
-      </form>
+      <section class="panel">
+        <h2>New Bet</h2>
+        <form id="upload-form">
+          <label>
+            Bet Name
+            <input id="bet-name" name="name" type="text" placeholder="Arsenal vs Chelsea" required />
+          </label>
 
-      <section>
-        <h2>My bets</h2>
-        <ul id="bet-list"></ul>
+          <div class="two-col">
+            <label>
+              Stake ($)
+              <input id="stake" name="stake" type="number" min="0.01" step="0.01" required />
+            </label>
+            <label>
+              Decimal Odds
+              <input id="odds" name="odds" type="number" min="1.01" step="0.01" required />
+            </label>
+          </div>
+
+          <label>
+            Placed At
+            <input id="placed-at" name="placedAt" type="datetime-local" />
+          </label>
+
+          <label>
+            Screenshot
+            <input id="screenshot" name="screenshot" type="file" accept="image/*" capture="environment" required />
+          </label>
+
+          <button type="submit">Upload and Save Bet</button>
+          <p id="form-message" class="message" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Stats</h2>
+        <div id="stats-grid" class="stats-grid"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Bet History</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Bet</th>
+                <th>Stake</th>
+                <th>Odds</th>
+                <th>Potential Profit</th>
+                <th>Status</th>
+                <th>Slip</th>
+              </tr>
+            </thead>
+            <tbody id="bet-list"></tbody>
+          </table>
+        </div>
       </section>
     </main>
 

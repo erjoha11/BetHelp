@@ -1,5 +1,7 @@
-const form = typeof document !== 'undefined' ? document.getElementById('bet-form') : null;
+const form = typeof document !== 'undefined' ? document.getElementById('upload-form') : null;
 const list = typeof document !== 'undefined' ? document.getElementById('bet-list') : null;
+const statsGrid = typeof document !== 'undefined' ? document.getElementById('stats-grid') : null;
+const formMessage = typeof document !== 'undefined' ? document.getElementById('form-message') : null;
 
 const formatCurrency = (value) => `$${value.toFixed(2)}`;
 
@@ -9,25 +11,169 @@ function createBetLine(name, stake, odds) {
   return `${name}: stake ${formatCurrency(stake)}, odds ${odds.toFixed(2)}, payout ${formatCurrency(payout)}, profit ${formatCurrency(profit)}`;
 }
 
+function setMessage(text, isError = false) {
+  if (!formMessage) {
+    return;
+  }
+
+  formMessage.textContent = text;
+  formMessage.dataset.state = isError ? 'error' : 'success';
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return '-';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '-';
+  }
+
+  return date.toLocaleString();
+}
+
+function renderStats(stats) {
+  if (!statsGrid) {
+    return;
+  }
+
+  const statItems = [
+    ['Total Bets', stats.totalBets],
+    ['Pending', stats.pendingBets],
+    ['Won', stats.wonBets],
+    ['Lost', stats.lostBets],
+    ['Total Stake', formatCurrency(stats.totalStake)],
+    ['Potential Payout', formatCurrency(stats.potentialPayout)],
+    ['Potential Profit', formatCurrency(stats.potentialProfit)],
+    ['Settled Profit', formatCurrency(stats.settledProfit)],
+    ['Average Odds', Number(stats.averageOdds || 0).toFixed(2)],
+    ['ROI (Settled)', `${Number(stats.roiPercent || 0).toFixed(2)}%`]
+  ];
+
+  statsGrid.innerHTML = statItems
+    .map(
+      ([label, value]) =>
+        `<article class="stat"><h3>${label}</h3><p>${value}</p></article>`
+    )
+    .join('');
+}
+
+function renderBets(bets) {
+  if (!list) {
+    return;
+  }
+
+  if (!bets.length) {
+    list.innerHTML =
+      '<tr><td colspan="6" class="empty">No bets yet. Upload your first screenshot to begin.</td></tr>';
+    return;
+  }
+
+  list.innerHTML = bets
+    .map(
+      (bet) => `
+        <tr>
+          <td>
+            <strong>${bet.name}</strong>
+            <div class="meta">${formatDateTime(bet.placedAt)}</div>
+          </td>
+          <td>${formatCurrency(bet.stake)}</td>
+          <td>${Number(bet.odds).toFixed(2)}</td>
+          <td>${formatCurrency(bet.profit)}</td>
+          <td>
+            <select class="status-select" data-id="${bet.id}">
+              <option value="pending" ${bet.status === 'pending' ? 'selected' : ''}>Pending</option>
+              <option value="won" ${bet.status === 'won' ? 'selected' : ''}>Won</option>
+              <option value="lost" ${bet.status === 'lost' ? 'selected' : ''}>Lost</option>
+            </select>
+          </td>
+          <td>
+            ${bet.screenshot ? `<a href="${bet.screenshot}" target="_blank" rel="noopener noreferrer">View</a>` : '-'}
+          </td>
+        </tr>
+      `
+    )
+    .join('');
+}
+
+async function refreshData() {
+  const [betsResponse, statsResponse] = await Promise.all([
+    fetch('/api/bets'),
+    fetch('/api/stats')
+  ]);
+
+  if (!betsResponse.ok || !statsResponse.ok) {
+    throw new Error('Failed to load data from server');
+  }
+
+  const betsPayload = await betsResponse.json();
+  const statsPayload = await statsResponse.json();
+  renderBets(betsPayload.bets || []);
+  renderStats(statsPayload.stats || {});
+}
+
+async function updateBetStatus(id, status) {
+  const response = await fetch(`/api/bets/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.error || 'Could not update bet status');
+  }
+}
+
 if (form && list) {
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    const nameValue = document.getElementById('bet-name')?.value.trim() || '';
-    const stakeValue = Number(document.getElementById('stake')?.value);
-    const oddsValue = Number(document.getElementById('odds')?.value);
+    try {
+      setMessage('Uploading...');
+      const data = new FormData(form);
 
-    if (!nameValue || !Number.isFinite(stakeValue) || !Number.isFinite(oddsValue)) {
+      const response = await fetch('/api/bets/upload', {
+        method: 'POST',
+        body: data
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || 'Upload failed');
+      }
+
+      form.reset();
+      setMessage('Bet saved successfully.');
+      await refreshData();
+    } catch (error) {
+      setMessage(error.message, true);
+    }
+  });
+
+  list.addEventListener('change', async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLSelectElement) || !target.classList.contains('status-select')) {
       return;
     }
 
-    const item = document.createElement('li');
-    item.textContent = createBetLine(nameValue, stakeValue, oddsValue);
-    list.prepend(item);
-    form.reset();
+    const id = Number(target.dataset.id);
+    const status = target.value;
+
+    try {
+      await updateBetStatus(id, status);
+      await refreshData();
+    } catch (error) {
+      setMessage(error.message, true);
+    }
+  });
+
+  refreshData().catch((error) => {
+    setMessage(error.message, true);
   });
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { createBetLine };
+  module.exports = { createBetLine, formatCurrency };
 }

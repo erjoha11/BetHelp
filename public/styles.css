@@ -175,10 +175,22 @@ button.danger:hover {
   overflow-x: auto;
 }
 
+.history-toolbar {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+}
+
+.history-summary {
+  margin: 0 0 0.7rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 650px;
+  min-width: 780px;
 }
 
 th,
@@ -225,5 +237,9 @@ th {
 
   .hero {
     padding: 1.6rem;
+  }
+
+  .history-toolbar {
+    grid-template-columns: 2fr 1fr 1fr;
   }
 }

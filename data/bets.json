@@ -1,4 +1,55 @@
 {
-  "nextId": 1,
-  "bets": []
+  "nextId": 6,
+  "bets": [
+    {
+      "id": 4,
+      "name": "Fernandes, Bruno scorer or assist (Super Sub)",
+      "stake": 100,
+      "odds": 2.05,
+      "payout": 205,
+      "profit": 105,
+      "status": "pending",
+      "source": "screenshot",
+      "bookmaker": "comeon",
+      "scenario": "special-market",
+      "betType": "single",
+      "legs": [
+        {
+          "homeTeam": "Portugal",
+          "awayTeam": "Kroatia",
+          "rawLine": "Portugal - Kroatia"
+        }
+      ],
+      "extractionStatus": "parsed",
+      "screenshot": "/uploads/1783027794513-751323528.png",
+      "placedAt": "2026-07-02T21:40:47.548Z",
+      "createdAt": "2026-07-02T21:40:47.548Z",
+      "updatedAt": "2026-07-02T21:40:47.548Z"
+    },
+    {
+      "id": 5,
+      "name": "Bygg et spill X2: Portugal 1X2 + Cristiano Ronaldo scorer",
+      "stake": 100,
+      "odds": 2.37,
+      "payout": 237,
+      "profit": 137,
+      "status": "pending",
+      "source": "screenshot",
+      "bookmaker": "comeon",
+      "scenario": "special-market",
+      "betType": "multi",
+      "legs": [
+        {
+          "homeTeam": "Portugal",
+          "awayTeam": "Kroatia",
+          "rawLine": "Portugal - Kroatia"
+        }
+      ],
+      "extractionStatus": "parsed",
+      "screenshot": "/uploads/1783027794513-751323528.png",
+      "placedAt": "2026-07-02T21:40:47.560Z",
+      "createdAt": "2026-07-02T21:40:47.560Z",
+      "updatedAt": "2026-07-02T21:40:47.560Z"
+    }
+  ]
 }

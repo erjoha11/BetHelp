@@ -5,6 +5,14 @@ const formMessage = typeof document !== 'undefined' ? document.getElementById('f
 const screenshotInput = typeof document !== 'undefined' ? document.getElementById('screenshot') : null;
 const pasteButton = typeof document !== 'undefined' ? document.getElementById('paste-button') : null;
 const pasteTarget = typeof document !== 'undefined' ? document.getElementById('paste-target') : null;
+const historySearch = typeof document !== 'undefined' ? document.getElementById('history-search') : null;
+const historyStatusFilter =
+  typeof document !== 'undefined' ? document.getElementById('history-status-filter') : null;
+const historySiteFilter =
+  typeof document !== 'undefined' ? document.getElementById('history-site-filter') : null;
+const historySummary = typeof document !== 'undefined' ? document.getElementById('history-summary') : null;
+
+let allBets = [];
 
 const formatCurrency = (value) => `${value.toFixed(2)} Kr`;
 
@@ -67,6 +75,75 @@ function formatDateTime(value) {
   return date.toLocaleString();
 }
 
+function normalizeSearchText(value) {
+  return String(value || '').toLowerCase().trim();
+}
+
+function buildSiteFilterOptions(bets) {
+  if (!historySiteFilter) {
+    return;
+  }
+
+  const previous = historySiteFilter.value || 'all';
+  const sites = Array.from(
+    new Set(
+      (bets || [])
+        .map((bet) => String(bet.bookmaker || 'unknown-site').trim())
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+
+  historySiteFilter.innerHTML = ['<option value="all">All sites</option>']
+    .concat(sites.map((site) => `<option value="${site}">${site}</option>`))
+    .join('');
+
+  if (sites.includes(previous)) {
+    historySiteFilter.value = previous;
+  }
+}
+
+function getFilteredBets() {
+  const searchTerm = normalizeSearchText(historySearch?.value || '');
+  const statusFilter = historyStatusFilter?.value || 'all';
+  const siteFilter = historySiteFilter?.value || 'all';
+
+  return allBets.filter((bet) => {
+    if (statusFilter !== 'all' && bet.status !== statusFilter) {
+      return false;
+    }
+
+    const site = String(bet.bookmaker || 'unknown-site');
+    if (siteFilter !== 'all' && site !== siteFilter) {
+      return false;
+    }
+
+    if (!searchTerm) {
+      return true;
+    }
+
+    const legs = Array.isArray(bet.legs) ? bet.legs : [];
+    const haystack = [
+      bet.name,
+      site,
+      bet.scenario,
+      bet.betType,
+      ...legs.map((leg) => `${leg.homeTeam} ${leg.awayTeam}`)
+    ]
+      .join(' ')
+      .toLowerCase();
+
+    return haystack.includes(searchTerm);
+  });
+}
+
+function renderHistorySummary(filteredCount, totalCount) {
+  if (!historySummary) {
+    return;
+  }
+
+  historySummary.textContent = `Showing ${filteredCount} of ${totalCount} bets`;
+}
+
 function renderStats(stats) {
   if (!statsGrid) {
     return;
@@ -100,7 +177,7 @@ function renderBets(bets) {
 
   if (!bets.length) {
     list.innerHTML =
-      '<tr><td colspan="6" class="empty">No bets yet. Upload your first screenshot to begin.</td></tr>';
+      '<tr><td colspan="7" class="empty">No matching bets. Try changing filters or upload a new screenshot.</td></tr>';
     return;
   }
 
@@ -140,6 +217,8 @@ function renderBets(bets) {
           </td>
           <td>
             ${bet.screenshot ? `<a href="${bet.screenshot}" target="_blank" rel="noopener noreferrer">View</a>` : '-'}
+          </td>
+          <td>
             <button type="button" class="danger delete-bet" data-id="${bet.id}">Delete</button>
           </td>
         </tr>
@@ -147,6 +226,12 @@ function renderBets(bets) {
       }
     )
     .join('');
+}
+
+function refreshHistoryPanel() {
+  const filtered = getFilteredBets();
+  renderBets(filtered);
+  renderHistorySummary(filtered.length, allBets.length);
 }
 
 async function refreshData() {
@@ -161,7 +246,9 @@ async function refreshData() {
 
   const betsPayload = await betsResponse.json();
   const statsPayload = await statsResponse.json();
-  renderBets(betsPayload.bets || []);
+  allBets = betsPayload.bets || [];
+  buildSiteFilterOptions(allBets);
+  refreshHistoryPanel();
   renderStats(statsPayload.stats || {});
 }
 
@@ -263,6 +350,14 @@ if (form && list) {
       setMessage(error.message, true);
     }
   });
+
+  const historyControlHandler = () => {
+    refreshHistoryPanel();
+  };
+
+  historySearch?.addEventListener('input', historyControlHandler);
+  historyStatusFilter?.addEventListener('change', historyControlHandler);
+  historySiteFilter?.addEventListener('change', historyControlHandler);
 
   refreshData().catch((error) => {
     setMessage(error.message, true);

@@ -16,6 +16,7 @@ fs.writeFileSync(testDataFile, JSON.stringify({ nextId: 1, bets: [] }, null, 2))
 
 const { createBetLine } = require('../public/app.js');
 const { getSafePath, server } = require('../server.js');
+const { addBet } = require('../lib/betStore');
 
 function requestJson(instance, { method, pathName, payload }) {
   return new Promise((resolve, reject) => {
@@ -161,4 +162,17 @@ test('invalid status update returns validation error', async (t) => {
   });
 
   assert.equal(updateResponse.statusCode, 400);
+});
+
+test('screenshot-source bet can be created without typed fields', () => {
+  const bet = addBet({
+    source: 'screenshot',
+    screenshot: '/uploads/example.png',
+    extractionStatus: 'failed'
+  });
+
+  assert.equal(bet.source, 'screenshot');
+  assert.equal(bet.name.startsWith('Imported bet '), true);
+  assert.equal(bet.stake, 0);
+  assert.equal(bet.odds, 1);
 });

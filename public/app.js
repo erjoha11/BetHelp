@@ -209,23 +209,22 @@ function renderBets(bets) {
         const gamesCount = legs.length;
         const payout = Number(bet.stake || 0) * Number(bet.odds || 0);
         const settled = getSettledProfit(bet);
+        const typeLabel = bet.betType || 'single';
+        const extractionLabel = bet.extractionStatus || 'unknown';
+        const summaryMeta = `${typeLabel} - ${extractionLabel}`;
         const legsMarkup = legs.length
-          ? `<ul class="legs-list">${legs
-              .map(
-                (leg) =>
-                  `<li>${leg.homeTeam} vs ${leg.awayTeam}</li>`
-              )
-              .join('')}</ul>`
+          ? `<div class="legs-inline">${legs
+              .slice(0, 2)
+              .map((leg) => `${leg.homeTeam} vs ${leg.awayTeam}`)
+              .join(' | ')}${legs.length > 2 ? ` +${legs.length - 2} more` : ''}</div>`
           : '';
 
         return `
         <tr class="history-row">
           <td class="id-cell">${bet.id}</td>
           <td>
-            <strong>${bet.name}</strong>
-            <div class="meta">Scenario: ${bet.scenario || 'unknown'}</div>
-            <div class="meta">Type: ${bet.betType || 'single'}${legs.length ? ` (${legs.length} games)` : ''}</div>
-            <div class="meta">Extraction: ${bet.extractionStatus || 'unknown'}</div>
+            <strong class="bet-main">${bet.name}</strong>
+            <div class="bet-sub">${summaryMeta}</div>
             ${legsMarkup}
           </td>
           <td>${formatDateTime(bet.placedAt)}</td>

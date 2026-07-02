@@ -303,6 +303,26 @@ tbody tr:hover {
   color: var(--muted);
 }
 
+.bet-main {
+  display: block;
+  line-height: 1.2;
+}
+
+.bet-sub {
+  margin-top: 0.14rem;
+  font-size: 0.76rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.legs-inline {
+  margin-top: 0.24rem;
+  color: var(--ink-soft);
+  font-size: 0.79rem;
+  line-height: 1.25;
+}
+
 .id-cell {
   color: var(--ink-soft);
   font-weight: 700;

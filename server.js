@@ -16,6 +16,16 @@ const { extractBetFromScreenshot } = require('./lib/ocrParser');
 const publicDir = path.join(__dirname, 'public');
 const uploadsDir = path.join(__dirname, 'uploads');
 const port = process.env.PORT || 3000;
+const configuredApiKey = String(process.env.BETHELP_API_KEY || '').trim();
+const writeRateLimitWindowMs = Math.max(
+  1000,
+  Number(process.env.BETHELP_WRITE_RATE_WINDOW_MS || 60_000)
+);
+const writeRateLimitMax = Math.max(
+  1,
+  Number(process.env.BETHELP_WRITE_RATE_MAX || 60)
+);
+const writeRateBuckets = new Map();
 
 function getSafePath(urlPath) {
   const pathnameRaw = String(urlPath || '/').split('?')[0];
@@ -38,6 +48,41 @@ function getSafePath(urlPath) {
 }
 
 fs.mkdirSync(uploadsDir, { recursive: true });
+
+function getClientIdentifier(req) {
+  return String(req.ip || req.socket?.remoteAddress || 'unknown');
+}
+
+function requireApiKey(req, res, next) {
+  if (!configuredApiKey) {
+    next();
+    return;
+  }
+
+  const provided = String(req.get('x-api-key') || '').trim();
+  if (provided && provided === configuredApiKey) {
+    next();
+    return;
+  }
+
+  res.status(401).json({ error: 'Missing or invalid API key' });
+}
+
+function limitWriteRequests(req, res, next) {
+  const now = Date.now();
+  const key = getClientIdentifier(req);
+  const existing = writeRateBuckets.get(key) || [];
+  const recent = existing.filter((timestamp) => now - timestamp < writeRateLimitWindowMs);
+
+  if (recent.length >= writeRateLimitMax) {
+    res.status(429).json({ error: 'Too many write requests, please retry shortly' });
+    return;
+  }
+
+  recent.push(now);
+  writeRateBuckets.set(key, recent);
+  next();
+}
 
 const storage = multer.diskStorage({
   destination: (_req, _file, callback) => {
@@ -92,6 +137,26 @@ function createBetsFromParsedScreenshot(fileName, parsed, placedAt) {
   );
 }
 
+function buildBetInputsFromParsedScreenshot(fileName, parsed, placedAt) {
+  const extractedBets = Array.isArray(parsed.bets) && parsed.bets.length ? parsed.bets : [parsed];
+
+  return extractedBets.map((entry) => ({
+    name: entry.name,
+    stake: entry.stake,
+    odds: entry.odds,
+    status: entry.status,
+    confidenceScore: entry.confidenceScore,
+    legs: entry.legs,
+    betType: entry.betType,
+    bookmaker: entry.bookmaker || parsed.bookmaker,
+    scenario: entry.scenario,
+    placedAt,
+    source: 'screenshot',
+    extractionStatus: entry.extractionStatus,
+    screenshot: `/uploads/${fileName}`
+  }));
+}
+
 app.get('/api/bets', (_req, res) => {
   res.json({ bets: listBets() });
 });
@@ -100,7 +165,7 @@ app.get('/api/stats', (_req, res) => {
   res.json({ stats: computeStats() });
 });
 
-app.post('/api/bets', (req, res) => {
+app.post('/api/bets', requireApiKey, limitWriteRequests, (req, res) => {
   try {
     const bet = addBet({
       name: req.body?.name,
@@ -116,7 +181,7 @@ app.post('/api/bets', (req, res) => {
   }
 });
 
-app.post('/api/bets/upload', upload.single('screenshot'), (req, res) => {
+app.post('/api/bets/upload', requireApiKey, limitWriteRequests, upload.single('screenshot'), (req, res) => {
   Promise.resolve()
     .then(async () => {
       if (!req.file) {
@@ -146,7 +211,12 @@ app.post('/api/bets/upload', upload.single('screenshot'), (req, res) => {
     });
 });
 
-app.post('/api/bets/upload/batch', upload.array('screenshots', 25), (req, res) => {
+app.post(
+  '/api/bets/upload/batch',
+  requireApiKey,
+  limitWriteRequests,
+  upload.array('screenshots', 25),
+  (req, res) => {
   Promise.resolve()
     .then(async () => {
       const files = Array.isArray(req.files) ? req.files : [];
@@ -191,9 +261,10 @@ app.post('/api/bets/upload/batch', upload.array('screenshots', 25), (req, res) =
 
       res.status(400).json({ error: error.message });
     });
-});
+  }
+);
 
-app.patch('/api/bets/:id/status', (req, res) => {
+app.patch('/api/bets/:id/status', requireApiKey, limitWriteRequests, (req, res) => {
   const id = Number(req.params.id);
   const status = req.body?.status;
 
@@ -216,7 +287,7 @@ app.patch('/api/bets/:id/status', (req, res) => {
   res.json({ bet: updated });
 });
 
-app.delete('/api/bets/:id', (req, res) => {
+app.delete('/api/bets/:id', requireApiKey, limitWriteRequests, (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     res.status(400).json({ error: 'Invalid bet id' });
@@ -232,7 +303,7 @@ app.delete('/api/bets/:id', (req, res) => {
   res.json({ deletedId: id });
 });
 
-app.post('/api/bets/reprocess', (req, res) => {
+app.post('/api/bets/reprocess', requireApiKey, limitWriteRequests, (req, res) => {
   Promise.resolve()
     .then(async () => {
       const allBets = listBets();
@@ -262,19 +333,31 @@ app.post('/api/bets/reprocess', (req, res) => {
         }
 
         const existing = listBets().filter((bet) => bet.screenshot === screenshotPath);
-        for (const bet of existing) {
-          deleteBet(bet.id);
+
+        try {
+          const parsed = await extractBetFromScreenshot(fullPath);
+          const createdInputs = buildBetInputsFromParsedScreenshot(path.basename(fullPath), parsed);
+
+          for (const bet of existing) {
+            deleteBet(bet.id);
+          }
+
+          const created = createdInputs.map((input) => addBet(input));
+
+          summary.push({
+            screenshot: screenshotPath,
+            deletedCount: existing.length,
+            createdCount: created.length,
+            bookmaker: parsed.bookmaker || 'unknown-site'
+          });
+        } catch (error) {
+          summary.push({
+            screenshot: screenshotPath,
+            skipped: true,
+            reason: 'parse-failed',
+            error: error.message
+          });
         }
-
-        const parsed = await extractBetFromScreenshot(fullPath);
-        const created = createBetsFromParsedScreenshot(path.basename(fullPath), parsed);
-
-        summary.push({
-          screenshot: screenshotPath,
-          deletedCount: existing.length,
-          createdCount: created.length,
-          bookmaker: parsed.bookmaker || 'unknown-site'
-        });
       }
 
       res.json({ reprocessed: summary.length, summary });

@@ -44,3 +44,24 @@ Then open `http://localhost:3000`.
 ```bash
 npm test
 ```
+
+## Optional API protection
+
+You can protect all write endpoints (`POST`, `PATCH`, `DELETE` under `/api/bets`) with an API key.
+
+Set this environment variable before starting the app:
+
+```bash
+BETHELP_API_KEY=your-secret-key npm start
+```
+
+When enabled, write requests must include header `x-api-key: your-secret-key`.
+
+## Optional write rate limiting
+
+Write endpoints are protected with a simple in-memory rate limiter.
+
+Environment variables:
+
+- `BETHELP_WRITE_RATE_WINDOW_MS` (default: `60000`)
+- `BETHELP_WRITE_RATE_MAX` (default: `60`)

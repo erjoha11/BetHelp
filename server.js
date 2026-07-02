@@ -12,15 +12,37 @@ const mimeTypes = {
 };
 
 function getSafePath(urlPath) {
-  const normalized = path.normalize(urlPath).replace(/^([.][.][/\\])+/, '');
+  const pathnameRaw = String(urlPath || '/').split('?')[0];
+  let pathname;
+
+  try {
+    pathname = decodeURIComponent(pathnameRaw);
+  } catch {
+    return null;
+  }
+
+  const pathSegments = pathname.split('/');
+
+  if (pathSegments.includes('..')) {
+    return null;
+  }
+
+  const normalized = path.posix.normalize(pathname);
   return normalized === '/' ? '/index.html' : normalized;
 }
 
 const server = http.createServer((req, res) => {
   const safePath = getSafePath(req.url || '/');
-  const filePath = path.join(publicDir, safePath);
+  if (!safePath) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Forbidden');
+    return;
+  }
 
-  if (!filePath.startsWith(publicDir)) {
+  const filePath = path.resolve(publicDir, `.${safePath}`);
+  const relativePath = path.relative(publicDir, filePath);
+
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
     res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Forbidden');
     return;

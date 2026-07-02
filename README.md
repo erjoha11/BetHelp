@@ -5,8 +5,12 @@ BetHelp is a sports betting tracker focused on mobile-first bet registration.
 You can:
 - Upload a screenshot of your bet slip from your phone
 - Auto-extract bet details (name, stake, decimal odds) from the screenshot
+- Detect bookmaker/site when possible
+- Split one screenshot into multiple bets when multiple bet blocks are present
+- Track game legs (teams) for single and multi-game bets
 - Persist bets in a local database file
 - Track status (`pending`, `won`, `lost`)
+- Delete misuploads from the Bet History table
 - View live stats (profit, ROI, average odds, totals)
 
 Currency display is in `Kr`.

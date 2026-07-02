@@ -17,6 +17,7 @@ fs.writeFileSync(testDataFile, JSON.stringify({ nextId: 1, bets: [] }, null, 2))
 const { createBetLine } = require('../public/app.js');
 const { getSafePath, server } = require('../server.js');
 const { addBet } = require('../lib/betStore');
+const { parseLegs, extractBetFromScreenshot } = require('../lib/ocrParser');
 
 function requestJson(instance, { method, pathName, payload }) {
   return new Promise((resolve, reject) => {
@@ -175,4 +176,51 @@ test('screenshot-source bet can be created without typed fields', () => {
   assert.equal(bet.name.startsWith('Imported bet '), true);
   assert.equal(bet.stake, 0);
   assert.equal(bet.odds, 1);
+});
+
+test('parseLegs extracts multiple games from OCR text', () => {
+  const text = [
+    'Arsenal vs Chelsea',
+    'Liverpool - Tottenham',
+    'Stake 100 KR',
+    'Total Odds 2.24'
+  ].join('\n');
+
+  const legs = parseLegs(text);
+  assert.equal(legs.length, 2);
+  assert.equal(legs[0].homeTeam, 'Arsenal');
+  assert.equal(legs[0].awayTeam, 'Chelsea');
+  assert.equal(legs[1].homeTeam, 'Liverpool');
+  assert.equal(legs[1].awayTeam, 'Tottenham');
+});
+
+test('screenshot-source bet stores extracted multi-game legs', () => {
+  const bet = addBet({
+    source: 'screenshot',
+    name: 'Arsenal vs Chelsea + 1 more game',
+    stake: 100,
+    odds: 2.24,
+    bookmaker: 'bet365',
+    scenario: 'multi-game',
+    betType: 'multi',
+    legs: [
+      { homeTeam: 'Arsenal', awayTeam: 'Chelsea' },
+      { homeTeam: 'Liverpool', awayTeam: 'Tottenham' }
+    ],
+    screenshot: '/uploads/example.png',
+    extractionStatus: 'parsed'
+  });
+
+  assert.equal(bet.betType, 'multi');
+  assert.equal(bet.bookmaker, 'bet365');
+  assert.equal(bet.scenario, 'multi-game');
+  assert.equal(bet.legs.length, 2);
+  assert.equal(bet.legs[0].homeTeam, 'Arsenal');
+});
+
+test('extractBetFromScreenshot returns fallback structured bets for unreadable image', async () => {
+  const parsed = await extractBetFromScreenshot('/this/file/does-not-exist.png');
+  assert.equal(Array.isArray(parsed.bets), true);
+  assert.equal(parsed.bets.length >= 1, true);
+  assert.equal(parsed.bookmaker, 'unknown-site');
 });

@@ -106,12 +106,27 @@ function renderBets(bets) {
 
   list.innerHTML = bets
     .map(
-      (bet) => `
+      (bet) => {
+        const legs = Array.isArray(bet.legs) ? bet.legs : [];
+        const legsMarkup = legs.length
+          ? `<ul class="legs-list">${legs
+              .map(
+                (leg) =>
+                  `<li>${leg.homeTeam} vs ${leg.awayTeam}</li>`
+              )
+              .join('')}</ul>`
+          : '';
+
+        return `
         <tr>
           <td>
             <strong>${bet.name}</strong>
             <div class="meta">${formatDateTime(bet.placedAt)}</div>
+            <div class="meta">Site: ${bet.bookmaker || 'unknown-site'}</div>
+            <div class="meta">Scenario: ${bet.scenario || 'unknown'}</div>
+            <div class="meta">Type: ${bet.betType || 'single'}${legs.length ? ` (${legs.length} games)` : ''}</div>
             <div class="meta">Extraction: ${bet.extractionStatus || 'unknown'}</div>
+            ${legsMarkup}
           </td>
           <td>${formatCurrency(bet.stake)}</td>
           <td>${Number(bet.odds).toFixed(2)}</td>
@@ -125,9 +140,11 @@ function renderBets(bets) {
           </td>
           <td>
             ${bet.screenshot ? `<a href="${bet.screenshot}" target="_blank" rel="noopener noreferrer">View</a>` : '-'}
+            <button type="button" class="danger delete-bet" data-id="${bet.id}">Delete</button>
           </td>
         </tr>
-      `
+      `;
+      }
     )
     .join('');
 }
@@ -161,6 +178,14 @@ async function updateBetStatus(id, status) {
   }
 }
 
+async function deleteBetById(id) {
+  const response = await fetch(`/api/bets/${id}`, { method: 'DELETE' });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.error || 'Could not delete bet');
+  }
+}
+
 if (form && list) {
   if (pasteButton && pasteTarget) {
     pasteButton.addEventListener('click', () => {
@@ -190,8 +215,12 @@ if (form && list) {
         throw new Error(payload.error || 'Upload failed');
       }
 
+      const payload = await response.json();
+      const extractedCount = Number(payload.extractedCount || 1);
+      const site = payload.detectedBookmaker || 'unknown-site';
+
       form.reset();
-      setMessage('Bet imported from screenshot.');
+      setMessage(`Imported ${extractedCount} bet${extractedCount > 1 ? 's' : ''} from ${site}.`);
       await refreshData();
     } catch (error) {
       setMessage(error.message, true);
@@ -209,6 +238,26 @@ if (form && list) {
 
     try {
       await updateBetStatus(id, status);
+      await refreshData();
+    } catch (error) {
+      setMessage(error.message, true);
+    }
+  });
+
+  list.addEventListener('click', async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLButtonElement) || !target.classList.contains('delete-bet')) {
+      return;
+    }
+
+    const id = Number(target.dataset.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return;
+    }
+
+    try {
+      await deleteBetById(id);
+      setMessage('Bet deleted.');
       await refreshData();
     } catch (error) {
       setMessage(error.message, true);

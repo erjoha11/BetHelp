@@ -105,6 +105,16 @@ button.secondary:hover {
   background: #dbe5f5;
 }
 
+button.danger {
+  margin-top: 0.5rem;
+  background: #d64545;
+  color: #fff;
+}
+
+button.danger:hover {
+  background: #b33333;
+}
+
 .paste-box {
   border: 1px dashed #aebed8;
   border-radius: 10px;
@@ -190,6 +200,17 @@ th {
   margin-top: 0.2rem;
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+.legs-list {
+  margin: 0.45rem 0 0;
+  padding-left: 1rem;
+  color: #1f2a3c;
+  font-size: 0.82rem;
+}
+
+.legs-list li {
+  margin: 0.2rem 0;
 }
 
 .empty {

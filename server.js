@@ -6,6 +6,7 @@ const multer = require('multer');
 const {
   addBet,
   computeStats,
+  deleteBet,
   listBets,
   updateBetStatus,
   validateStatus
@@ -93,24 +94,34 @@ app.post('/api/bets', (req, res) => {
 app.post('/api/bets/upload', upload.single('screenshot'), (req, res) => {
   Promise.resolve()
     .then(async () => {
-    if (!req.file) {
-      res.status(400).json({ error: 'Screenshot file is required' });
-      return;
-    }
+      if (!req.file) {
+        res.status(400).json({ error: 'Screenshot file is required' });
+        return;
+      }
 
       const parsed = await extractBetFromScreenshot(req.file.path);
+      const extractedBets = Array.isArray(parsed.bets) && parsed.bets.length ? parsed.bets : [parsed];
+      const createdBets = extractedBets.map((entry) =>
+        addBet({
+          name: entry.name,
+          stake: entry.stake,
+          odds: entry.odds,
+          legs: entry.legs,
+          betType: entry.betType,
+          bookmaker: entry.bookmaker || parsed.bookmaker,
+          scenario: entry.scenario,
+          placedAt: req.body?.placedAt,
+          source: 'screenshot',
+          extractionStatus: entry.extractionStatus,
+          screenshot: `/uploads/${req.file.filename}`
+        })
+      );
 
-    const bet = addBet({
-        name: parsed.name,
-        stake: parsed.stake,
-        odds: parsed.odds,
-      placedAt: req.body?.placedAt,
-      source: 'screenshot',
-        extractionStatus: parsed.extractionStatus,
-      screenshot: `/uploads/${req.file.filename}`
-    });
-
-    res.status(201).json({ bet });
+      res.status(201).json({
+        bets: createdBets,
+        detectedBookmaker: parsed.bookmaker,
+        extractedCount: createdBets.length
+      });
     })
     .catch((error) => {
       if (req.file?.path) {
@@ -142,6 +153,22 @@ app.patch('/api/bets/:id/status', (req, res) => {
   }
 
   res.json({ bet: updated });
+});
+
+app.delete('/api/bets/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ error: 'Invalid bet id' });
+    return;
+  }
+
+  const deleted = deleteBet(id);
+  if (!deleted) {
+    res.status(404).json({ error: 'Bet not found' });
+    return;
+  }
+
+  res.json({ deletedId: id });
 });
 
 app.use((error, _req, res, _next) => {

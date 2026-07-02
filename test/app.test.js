@@ -307,6 +307,8 @@ test('parseStake reads Norwegian Innsats value', () => {
 
 test('parseStatus maps Vunnet/Tapt to won/lost', () => {
   assert.equal(parseStatus('Vunnet Singel'), 'won');
+  assert.equal(parseStatus('unmet. singe!'), 'won');
+  assert.equal(parseStatus('Vumnet singel'), 'won');
   assert.equal(parseStatus('Tapt Singel'), 'lost');
   assert.equal(parseStatus('Singel'), 'pending');
 });

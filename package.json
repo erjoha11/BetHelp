@@ -1,0 +1,25 @@
+{
+  "name": "bethelp",
+  "version": "1.0.0",
+  "description": "A small sports betting helper app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erjoha11/BetHelp.git"
+  },
+  "keywords": [
+    "sports",
+    "betting",
+    "calculator"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/erjoha11/BetHelp/issues"
+  },
+  "homepage": "https://github.com/erjoha11/BetHelp#readme"
+}

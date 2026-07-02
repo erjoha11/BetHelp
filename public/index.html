@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BetHelp</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>BetHelp</h1>
+      <p>Track a bet and instantly calculate payout/profit.</p>
+
+      <form id="bet-form">
+        <label>
+          Bet name
+          <input id="bet-name" type="text" placeholder="Team A vs Team B" required />
+        </label>
+        <label>
+          Stake ($)
+          <input id="stake" type="number" min="0.01" step="0.01" required />
+        </label>
+        <label>
+          Decimal odds
+          <input id="odds" type="number" min="1.01" step="0.01" required />
+        </label>
+        <button type="submit">Add bet</button>
+      </form>
+
+      <section>
+        <h2>My bets</h2>
+        <ul id="bet-list"></ul>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

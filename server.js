@@ -392,7 +392,13 @@ if (require.main === module) {
 
   function startServer(preferredPort, allowFallback = true) {
     const onListening = () => {
-      console.log(`BetHelp app is running at http://localhost:${preferredPort}`);
+      const defaultMessage = 'BetHelp app is running at http://localhost:3000';
+      if (preferredPort === 3000) {
+        console.log(defaultMessage);
+        return;
+      }
+
+      console.log(`${defaultMessage} (fallback active: http://localhost:${preferredPort})`);
     };
 
     server.once('listening', onListening);

@@ -1,5 +1,6 @@
 const http = require('node:http');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const express = require('express');
 const multer = require('multer');
@@ -26,6 +27,29 @@ const writeRateLimitMax = Math.max(
   Number(process.env.BETHELP_WRITE_RATE_MAX || 60)
 );
 const writeRateBuckets = new Map();
+
+function getLocalIpv4Address() {
+  const interfaces = os.networkInterfaces();
+
+  for (const records of Object.values(interfaces)) {
+    if (!Array.isArray(records)) {
+      continue;
+    }
+
+    for (const record of records) {
+      if (!record) {
+        continue;
+      }
+
+      const family = typeof record.family === 'string' ? record.family : String(record.family);
+      if (family === 'IPv4' && !record.internal) {
+        return record.address;
+      }
+    }
+  }
+
+  return null;
+}
 
 function getSafePath(urlPath) {
   const pathnameRaw = String(urlPath || '/').split('?')[0];
@@ -389,16 +413,18 @@ const server = http.createServer(app);
 
 if (require.main === module) {
   const requestedPort = Number(port) || 3000;
+  const localIp = getLocalIpv4Address();
 
   function startServer(preferredPort, allowFallback = true) {
     const onListening = () => {
-      const defaultMessage = 'BetHelp app is running at http://localhost:3000';
+      const host = localIp || 'localhost';
+      const defaultMessage = `BetHelp app is running at http://${host}:3000`;
       if (preferredPort === 3000) {
         console.log(defaultMessage);
         return;
       }
 
-      console.log(`${defaultMessage} (fallback active: http://localhost:${preferredPort})`);
+      console.log(`${defaultMessage} (fallback active: http://${host}:${preferredPort})`);
     };
 
     server.once('listening', onListening);

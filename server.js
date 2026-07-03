@@ -388,9 +388,33 @@ app.use((error, _req, res, _next) => {
 const server = http.createServer(app);
 
 if (require.main === module) {
-  server.listen(port, () => {
-    console.log(`BetHelp app is running at http://localhost:${port}`);
-  });
+  const requestedPort = Number(port) || 3000;
+
+  function startServer(preferredPort, allowFallback = true) {
+    const onListening = () => {
+      console.log(`BetHelp app is running at http://localhost:${preferredPort}`);
+    };
+
+    server.once('listening', onListening);
+
+    server.once('error', (error) => {
+      if (error.code === 'EADDRINUSE' && allowFallback) {
+        server.removeListener('listening', onListening);
+        const nextPort = preferredPort + 1;
+        console.warn(
+          `Port ${preferredPort} is already in use. Retrying on port ${nextPort}...`
+        );
+        startServer(nextPort, false);
+        return;
+      }
+
+      throw error;
+    });
+
+    server.listen(preferredPort);
+  }
+
+  startServer(requestedPort, true);
 }
 
 module.exports = { app, server, getSafePath };

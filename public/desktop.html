@@ -29,6 +29,25 @@
         <div id="desktop-site-cards" class="desktop-site-cards"></div>
       </section>
 
+      <section class="panel desktop-summary-panel">
+        <h2>Today’s Value Bet Agent</h2>
+        <p>Paste market candidates as JSON with odds and either probability or fairOdds.</p>
+        <textarea
+          id="value-bet-input"
+          class="value-bet-input"
+          rows="12"
+          spellcheck="false"
+          placeholder='{"markets":[{"eventName":"Arsenal vs Chelsea","marketType":"1x2","selection":"Arsenal","bestOdds":2.35,"probability":48,"bookmaker":"bet365","startTime":"2026-07-22T18:00:00Z"}]}'
+        ></textarea>
+        <div class="desktop-hero-actions">
+          <button id="value-bet-scan" type="button">Scan Markets</button>
+          <button id="value-bet-sample" type="button" class="secondary">Load Sample</button>
+        </div>
+        <p id="value-bet-message" class="message" aria-live="polite"></p>
+        <p id="value-bet-summary" class="history-summary"></p>
+        <div id="value-bet-results" class="value-bet-results"></div>
+      </section>
+
       <section class="panel">
         <h2>Bet History (Desktop)</h2>
         <div class="history-toolbar">

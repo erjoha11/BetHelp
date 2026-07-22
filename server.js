@@ -13,6 +13,7 @@ const {
   validateStatus
 } = require('./lib/betStore');
 const { extractBetFromScreenshot } = require('./lib/ocrParser');
+const { scanMarkets } = require('./lib/valueBetAgent');
 
 const publicDir = path.join(__dirname, 'public');
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -191,6 +192,14 @@ app.get('/api/bets', (_req, res) => {
 
 app.get('/api/stats', (_req, res) => {
   res.json({ stats: computeStats() });
+});
+
+app.post('/api/value-bets/scan', (req, res) => {
+  try {
+    res.json(scanMarkets(req.body));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.post('/api/bets', requireApiKey, limitWriteRequests, (req, res) => {

@@ -19,6 +19,8 @@ Desktop analysis view is available at `http://localhost:3000/desktop`.
 
 Desktop view includes a "Reprocess Screenshots" action that re-runs extraction on all stored screenshots using the latest parser rules.
 
+Desktop view also includes a value-bet agent where you can paste today’s market candidates as JSON and rank 1x2, BTTS, over/under, and similar markets by positive expected value and estimated win probability.
+
 Currency display is in `Kr`.
 
 Stored data lives in `data/bets.json` and uploaded screenshots are stored in `uploads/`.
@@ -65,3 +67,24 @@ Environment variables:
 
 - `BETHELP_WRITE_RATE_WINDOW_MS` (default: `60000`)
 - `BETHELP_WRITE_RATE_MAX` (default: `60`)
+
+## Value bet scan API
+
+Send a JSON payload to `POST /api/value-bets/scan` with a `markets` array.
+
+Each market should include:
+- `eventName`
+- `marketType`
+- `selection`
+- `bestOdds`
+- either `probability` (0-1 or 0-100) or `fairOdds`
+
+Optional fields:
+- `bookmaker`
+- `startTime`
+- `confidence`
+- `minEdgePercent`
+- `minProbabilityPercent`
+- `limit`
+- `scanDate`
+- `onlyToday`

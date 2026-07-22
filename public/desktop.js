@@ -23,10 +23,57 @@ const desktopTableWrap =
   typeof document !== 'undefined' ? document.querySelector('.desktop-table-wrap') : null;
 const desktopColumnToggles =
   typeof document !== 'undefined' ? document.querySelectorAll('[data-desktop-col]') : [];
+const valueBetInput =
+  typeof document !== 'undefined' ? document.getElementById('value-bet-input') : null;
+const valueBetScanButton =
+  typeof document !== 'undefined' ? document.getElementById('value-bet-scan') : null;
+const valueBetSampleButton =
+  typeof document !== 'undefined' ? document.getElementById('value-bet-sample') : null;
+const valueBetMessage =
+  typeof document !== 'undefined' ? document.getElementById('value-bet-message') : null;
+const valueBetSummary =
+  typeof document !== 'undefined' ? document.getElementById('value-bet-summary') : null;
+const valueBetResults =
+  typeof document !== 'undefined' ? document.getElementById('value-bet-results') : null;
 
 let desktopBets = [];
 
+const valueBetSamplePayload = {
+  markets: [
+    {
+      eventName: 'Arsenal vs Chelsea',
+      marketType: '1x2',
+      selection: 'Arsenal',
+      bookmaker: 'bet365',
+      bestOdds: 2.35,
+      probability: 48,
+      startTime: '2026-07-22T18:00:00Z'
+    },
+    {
+      eventName: 'Real Madrid vs Sevilla',
+      marketType: 'BTTS',
+      selection: 'Yes',
+      bookmaker: 'unibet',
+      bestOdds: 1.95,
+      probability: 57,
+      startTime: '2026-07-22T20:00:00Z'
+    },
+    {
+      eventName: 'Inter vs Lazio',
+      marketType: 'Over 2.5',
+      selection: 'Over 2.5',
+      bookmaker: 'pinnacle',
+      bestOdds: 2.1,
+      fairOdds: 1.92,
+      startTime: '2026-07-22T19:45:00Z'
+    }
+  ],
+  minEdgePercent: 1,
+  limit: 5
+};
+
 const formatCurrency = (value) => `${Number(value || 0).toFixed(2)} Kr`;
+const formatPercent = (value) => `${Number(value || 0).toFixed(2)}%`;
 
 function escapeHtml(value) {
   return String(value || '')
@@ -62,6 +109,15 @@ function setMessage(text, isError = false) {
 
   desktopMessage.textContent = text;
   desktopMessage.dataset.state = isError ? 'error' : 'success';
+}
+
+function setValueBetMessage(text, isError = false) {
+  if (!valueBetMessage) {
+    return;
+  }
+
+  valueBetMessage.textContent = text;
+  valueBetMessage.dataset.state = isError ? 'error' : 'success';
 }
 
 function formatDateTime(value) {
@@ -364,6 +420,53 @@ function computeStatsFromBets(bets) {
   return stats;
 }
 
+function renderValueBetResults(payload) {
+  if (!valueBetResults || !valueBetSummary) {
+    return;
+  }
+
+  const candidates = Array.isArray(payload?.markets) ? payload.markets : [];
+  valueBetSummary.textContent = `Ranked ${payload.returnedMarkets || 0} of ${payload.analyzedMarkets || 0} analysable markets from ${payload.totalMarkets || 0} submitted entries.`;
+
+  if (!candidates.length) {
+    valueBetResults.innerHTML = '<p class="empty">No positive-EV markets matched the current scan.</p>';
+    return;
+  }
+
+  valueBetResults.innerHTML = candidates
+    .map(
+      (candidate) => `
+        <article class="value-bet-card">
+          <div class="value-bet-card-header">
+            <h3>${escapeHtml(candidate.eventName)}</h3>
+            <span class="pill">${escapeHtml(candidate.recommendation)}</span>
+          </div>
+          <p><strong>${escapeHtml(candidate.marketType)}</strong> · ${escapeHtml(candidate.selection)} · ${escapeHtml(candidate.bookmaker)}</p>
+          <p>Odds ${Number(candidate.bestOdds || 0).toFixed(2)} · Win probability ${formatPercent(candidate.estimatedProbabilityPercent)} · EV ${formatPercent(candidate.expectedValuePercent)}</p>
+          <p>Edge ${formatPercent(candidate.edgePercent)} · Fair odds ${Number(candidate.fairOdds || 0).toFixed(2)} · Confidence ${Number(candidate.confidenceScore || 0).toFixed(2)}</p>
+          <p>${escapeHtml(candidate.rationale || '')}</p>
+          <p>Kickoff: ${escapeHtml(formatDateTime(candidate.startTime))}</p>
+        </article>
+      `
+    )
+    .join('');
+}
+
+async function scanValueBets(payload) {
+  const response = await fetch('/api/value-bets/scan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result.error || 'Could not scan value bets');
+  }
+
+  return result;
+}
+
 function refreshDesktopTable() {
   const filtered = getFilteredBets();
   renderTableRows(filtered);
@@ -466,6 +569,36 @@ if (desktopList) {
   desktopDensity?.addEventListener('change', applyDesktopDensity);
   desktopColumnToggles.forEach((input) => {
     input.addEventListener('change', applyDesktopColumnVisibility);
+  });
+
+  valueBetSampleButton?.addEventListener('click', () => {
+    if (!valueBetInput) {
+      return;
+    }
+
+    valueBetInput.value = JSON.stringify(valueBetSamplePayload, null, 2);
+    setValueBetMessage('Loaded sample market scan payload.');
+  });
+
+  valueBetScanButton?.addEventListener('click', async () => {
+    if (!valueBetInput) {
+      return;
+    }
+
+    try {
+      const payload = JSON.parse(valueBetInput.value || '{}');
+      setValueBetMessage('Scanning today’s markets...');
+      const result = await scanValueBets(payload);
+      renderValueBetResults(result);
+      const best = result.bestCandidate;
+      setValueBetMessage(
+        best
+          ? `Best value bet: ${best.selection} in ${best.marketType} (${formatPercent(best.expectedValuePercent)} EV).`
+          : 'Scan completed with no positive-EV results.'
+      );
+    } catch (error) {
+      setValueBetMessage(error.message || 'Invalid market scan payload', true);
+    }
   });
 
   refreshDesktopData().catch((error) => {

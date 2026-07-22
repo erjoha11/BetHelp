@@ -134,6 +134,14 @@ const upload = multer({
 
 const app = express();
 app.use(express.json());
+app.use((req, res, next) => {
+  if (getSafePath(req.url) === null) {
+    res.status(403).json({ error: 'Forbidden path' });
+    return;
+  }
+
+  next();
+});
 app.use('/uploads', express.static(uploadsDir));
 app.use(express.static(publicDir));
 
